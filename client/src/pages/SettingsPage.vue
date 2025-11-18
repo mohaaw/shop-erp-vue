@@ -1131,6 +1131,7 @@ const handleSystemReset = async () => {
     grid-template-columns: 1fr;
   }
 }
+</style>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue';
