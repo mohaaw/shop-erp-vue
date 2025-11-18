@@ -83,14 +83,18 @@ onUnmounted(() => { window.removeEventListener('resize', updateScreenState); });
 </script>
 
 <style scoped>
-.default-layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background-color: var(--bg-color-secondary); }
+.default-layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background-color: var(--bg-color); }
 .layout-container { display: flex; flex-grow: 1; overflow: hidden; position: relative; }
-.main-content { flex-grow: 1; overflow-y: auto; padding: var(--space-lg); background-color: var(--bg-color-secondary); transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.main-content { flex-grow: 1; overflow-y: auto; padding: var(--space-lg); background-color: var(--bg-color); transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 @media (min-width: 992px) {
   .default-layout:not(.sidebar-visually-collapsed) .main-content { margin-left: 260px; }
   .default-layout.sidebar-visually-collapsed .main-content { margin-left: 70px; }
 }
-.page-content-wrapper { /* max-width: 1600px; margin: 0 auto; */ }
+.page-content-wrapper { padding-bottom: var(--space-xl); }
+.main-content { padding-top: var(--space-md); }
+@media (max-width: 768px) {
+  .main-content { padding: var(--space-md); }
+}
 .mobile-sidebar-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background-color: rgba(0,0,0,0.5);
