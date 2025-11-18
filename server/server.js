@@ -6,10 +6,21 @@ const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 3001; // Backend runs on port 3001
-const JWT_SECRET = 'your-very-secret-key-for-shop-erp-project-secure'; // Use a strong secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your-very-secret-key-for-shop-erp-project-secure'; // Use a strong secret
 
 // Middleware
-app.use(cors()); // Allows requests from your Vue app (e.g., http://localhost:5173)
+// Configure CORS properly for all origins in development
+const corsOptions = {
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json()); // To parse JSON request bodies
 
 // --- Mock User Data (In a real app, this would be a database) ---
@@ -155,4 +166,3 @@ app.listen(PORT, () => {
   console.log(`Ensure your Vue app's .env file has VITE_API_BASE_URL=http://localhost:${PORT}/api`);
   MOCK_USERS.forEach(u => console.log(`  - Mock User: Email: ${u.email}, Password: password123`));
 });
-

@@ -1,35 +1,361 @@
-# .
+# Shop ERP System
 
-This template should help get you started developing with Vue 3 in Vite.
+A comprehensive Enterprise Resource Planning (ERP) system for managing shop operations including products, customers, sales, inventory, and reporting.
 
-## Recommended IDE Setup
+## 🏗️ Project Structure
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+```
+shop-erp-vue/
+├── server/                    # Backend API Server (Node.js/Express)
+│   ├── server.js             # Main Express application
+│   ├── package.json          # Backend dependencies
+│   ├── .env.example          # Environment variables template
+│   └── README.md             # Backend setup instructions
+├── client/                    # Frontend Application (Vue 3)
+│   ├── src/                  # Source code
+│   │   ├── components/       # Vue components
+│   │   ├── pages/            # Page components
+│   │   ├── stores/           # Pinia state management
+│   │   ├── services/         # API services
+│   │   └── router/           # Vue Router configuration
+│   ├── index.html            # HTML entry point
+│   ├── vite.config.js        # Vite build configuration
+│   ├── package.json          # Frontend dependencies
+│   ├── .env.example          # Environment variables template
+│   └── README.md             # Frontend setup instructions
+├── README.md                 # This file
+└── .gitignore               # Git ignore rules
+```
 
-## Customize configuration
+## 🚀 Quick Start
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+### Prerequisites
 
-## Project Setup
+- **Node.js** (v14 or higher)
+- **npm** (v6 or higher)
 
-```sh
+### Backend Setup
+
+1. Navigate to the server directory:
+```bash
+cd server
+```
+
+2. Install dependencies:
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+3. Create a `.env` file (copy from `.env.example`):
+```bash
+copy .env.example .env
+```
 
-```sh
+4. Start the backend server:
+```bash
 npm run dev
 ```
 
-### Compile and Minify for Production
+The backend will run on `http://localhost:3001`
 
-```sh
+**Mock Credentials for Testing:**
+- Email: `admin@example.com` | Password: `password123`
+- Email: `staff@example.com` | Password: `password123`
+
+### Frontend Setup
+
+1. In a new terminal, navigate to the client directory:
+```bash
+cd client
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env` file (copy from `.env.example`):
+```bash
+copy .env.example .env
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+The frontend will run on `http://localhost:5173`
+
+## 📋 Features
+
+### Authentication & Authorization
+- User registration and login
+- JWT-based authentication
+- Role-based access control (Admin, Staff)
+- Protected routes and API endpoints
+
+### Dashboard
+- Real-time analytics
+- Sales summary
+- Inventory status
+- Quick action widgets
+- Recent activity tracking
+
+### Product Management
+- Add, edit, and delete products
+- Product categories
+- Stock level tracking
+- Product details and pricing
+
+### Customer Management
+- Customer profile management
+- Contact information
+- Purchase history
+- Customer segmentation
+
+### Point of Sale (POS)
+- Fast product selection
+- Shopping cart functionality
+- Quick checkout
+- Receipt generation
+- Transaction recording
+
+### Sales Management
+- Sales order creation and tracking
+- Order history
+- Sales analytics
+- Order status management
+
+### Inventory Management
+- Stock level tracking
+- Stock adjustments
+- Stock movement history
+- Low stock alerts
+- Inventory valuation
+
+### Reports
+- Sales reports by period
+- Inventory valuation reports
+- Stock movement reports
+- Exportable reports (Excel)
+
+### Settings
+- Application preferences
+- Theme switching
+- User profile management
+
+## 🔧 Configuration
+
+### Backend Configuration
+
+See `server/README.md` for detailed backend setup instructions.
+
+**Key Environment Variables:**
+```env
+PORT=3001
+NODE_ENV=development
+JWT_SECRET=your-secret-key
+```
+
+### Frontend Configuration
+
+See `client/README.md` for detailed frontend setup instructions.
+
+**Key Environment Variables:**
+```env
+VITE_API_BASE_URL=http://localhost:3001/api
+VITE_APP_ENV=development
+```
+
+## 🔌 API Documentation
+
+### Authentication Endpoints
+
+#### Login
+```
+POST /api/auth/login
+Body: { email, password }
+Response: { token, user }
+```
+
+#### Register
+```
+POST /api/auth/register
+Body: { name, email, password }
+Response: { user }
+```
+
+#### Get Current User
+```
+GET /api/auth/me
+Headers: Authorization: Bearer <token>
+Response: { user }
+```
+
+#### Logout
+```
+POST /api/auth/logout
+Headers: Authorization: Bearer <token>
+Response: { success: true }
+```
+
+#### Test API
+```
+GET /api/test
+Response: { success: true, message: "Backend API is reachable!" }
+```
+
+## 📦 Technology Stack
+
+### Backend
+- **Express.js** - Web framework
+- **bcryptjs** - Password hashing
+- **jsonwebtoken** - JWT authentication
+- **cors** - Cross-Origin Resource Sharing
+
+### Frontend
+- **Vue 3** - Progressive JavaScript framework
+- **Vite** - Fast build tool and dev server
+- **Pinia** - State management
+- **Vue Router** - Client-side routing
+- **Chart.js** - Data visualization
+- **XLSX** - Excel export functionality
+- **Axios** - HTTP client (configured in apiService)
+
+## 📚 Running Both Client and Server
+
+### Option 1: Two Terminals
+
+**Terminal 1 - Backend:**
+```bash
+cd server
+npm install
+npm run dev
+```
+
+**Terminal 2 - Frontend:**
+```bash
+cd client
+npm install
+npm run dev
+```
+
+### Option 2: PowerShell Commands
+
+Run both simultaneously:
+```powershell
+# Navigate to server and start
+cd server; npm install; npm run dev &
+# In a new terminal
+cd client; npm install; npm run dev
+```
+
+## 🔐 Security Notes
+
+### Development
+- Default JWT secret is provided for development only
+- Mock users are included for testing
+
+### Production
+- **NEVER** use the default JWT secret in production
+- Generate a strong secret: `openssl rand -base64 32`
+- Use HTTPS for all communications
+- Implement CSRF protection
+- Use secure cookie settings
+- Validate all user inputs
+- Implement rate limiting
+- Use environment variables for sensitive data
+
+## 🐛 Troubleshooting
+
+### Backend Won't Start
+- Check if port 3001 is available
+- Verify Node.js is installed: `node --version`
+- Check for errors in the console
+
+### Frontend Won't Start
+- Check if port 5173 is available
+- Clear node_modules: `Remove-Item node_modules -Recurse`
+- Reinstall: `npm install`
+
+### API Connection Errors
+- Verify backend is running on port 3001
+- Check `VITE_API_BASE_URL` in frontend `.env`
+- Check browser console for CORS errors
+- Verify firewall doesn't block ports 3001 and 5173
+
+### Authentication Issues
+- Ensure JWT_SECRET is the same in backend `.env` and server code
+- Check token expiration (default: 1 hour)
+- Clear localStorage and try again
+
+## 🚢 Building for Production
+
+### Backend Production Build
+```bash
+cd server
+npm install --production
+node server.js
+```
+
+### Frontend Production Build
+```bash
+cd client
 npm run build
+npm run preview  # Test production build locally
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+Deploy the `dist` folder to your hosting platform.
 
-```sh
-npm run lint
-```
+## 📝 Development Workflow
+
+1. Create feature branches
+2. Make changes in respective folders (client or server)
+3. Test thoroughly
+4. Run linting: `npm run lint`
+5. Format code: `npm run format`
+6. Commit and push changes
+
+## 📖 Detailed Documentation
+
+- **Backend Setup**: See `server/README.md`
+- **Frontend Setup**: See `client/README.md`
+- **API Reference**: See backend README for detailed endpoints
+
+## 🤝 Contributing
+
+1. Create a new branch for your feature
+2. Follow the existing code structure
+3. Add comments for complex logic
+4. Test your changes
+5. Ensure linting passes
+
+## 📄 License
+
+ISC
+
+## 📞 Support
+
+For issues or questions:
+1. Check the relevant README (server or client)
+2. Review the troubleshooting section
+3. Check console logs and error messages
+
+## 🎯 Future Enhancements
+
+- [ ] Database integration (MongoDB/PostgreSQL)
+- [ ] Real-time notifications
+- [ ] Advanced analytics
+- [ ] Mobile app version
+- [ ] Payment gateway integration
+- [ ] Email notifications
+- [ ] Multi-language support
+- [ ] Advanced permission system
+- [ ] Audit logging
+- [ ] API documentation (Swagger)
+
+---
+
+**Happy Coding!** 🎉
+
+For more information about the project structure and setup, please refer to the individual README files in the `server` and `client` directories.

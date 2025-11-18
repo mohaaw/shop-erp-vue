@@ -1,5 +1,5 @@
 {
-  "name": "shop-erp-system",
+  "name": "shop-erp-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,6 +13,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "axios": "^1.6.8",
     "chart.js": "^4.4.9",
     "pinia": "^3.0.1",
     "vue": "^3.5.13",
