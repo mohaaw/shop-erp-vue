@@ -46,8 +46,8 @@ const sidebarState = reactive({
   }
 });
 const mainContentStyle = computed(() => {
-  if (sidebarState.isMobileView) return { marginLeft: '0' };
-  return { marginLeft: (sidebarState.isUserCollapsed && !sidebarState.isHoveringOverCollapsedSidebar) ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED };
+  // Margin-left is now handled by CSS media queries for better performance and consistency
+  return {};
 });
 const handleSidebarToggleRequest = () => {
   sidebarState.isUserCollapsed = !sidebarState.isUserCollapsed;
@@ -85,20 +85,27 @@ onUnmounted(() => { window.removeEventListener('resize', updateScreenState); });
 <style scoped>
 .default-layout { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background-color: var(--bg-color); }
 .layout-container { display: flex; flex-grow: 1; overflow: hidden; position: relative; }
-.main-content { flex-grow: 1; overflow-y: auto; padding: var(--space-lg); background-color: var(--bg-color); transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.main-content { flex-grow: 1; overflow-y: auto; padding: var(--space-lg); background-color: var(--bg-color); transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-left: 0; }
+
 @media (min-width: 992px) {
-  .default-layout:not(.sidebar-visually-collapsed) .main-content { margin-left: 260px; }
-  .default-layout.sidebar-visually-collapsed .main-content { margin-left: 70px; }
+  .default-layout:not(.sidebar-visually-collapsed) .main-content {
+    margin-left: 260px;
+  }
+  .default-layout.sidebar-visually-collapsed .main-content {
+    margin-left: 70px;
+  }
 }
+
 .page-content-wrapper { padding-bottom: var(--space-xl); }
 .main-content { padding-top: var(--space-md); }
+
 @media (max-width: 768px) {
   .main-content { padding: var(--space-md); }
 }
+
 .mobile-sidebar-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background-color: rgba(0,0,0,0.5);
   z-index: 1025;
-  /* display: none; /* Controlled by v-if in template */
 }
 </style>

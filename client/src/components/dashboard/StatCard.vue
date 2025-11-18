@@ -67,17 +67,19 @@ const changeTypeClass = computed(() => {
 }
 .stat-card .card-body {
   display: flex;
-  align-items: center;
-  padding: var(--space-md);
+  align-items: flex-start;
+  padding: 1rem 1.2rem;
+  min-height: 120px;
+  gap: 0.8rem;
 }
 .stat-icon-wrapper {
   font-size: 1.5rem;
-  padding: var(--space-md);
+  padding: 0.8rem;
   border-radius: 50%;
   color: white;
-  margin-right: var(--space-lg);
-  width: 64px;
-  height: 64px;
+  margin-right: 1.2rem;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -94,6 +96,9 @@ const changeTypeClass = computed(() => {
 
 .stat-content {
   flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 .stat-title {
   font-size: 0.9rem;
@@ -103,11 +108,14 @@ const changeTypeClass = computed(() => {
   font-weight: 600;
 }
 .stat-value {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-color);
   margin-bottom: var(--space-xs);
-  line-height: 1.1;
+  line-height: 1.2;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 .stat-change {
   font-size: 0.85rem;

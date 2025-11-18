@@ -156,6 +156,62 @@ tbody tr:hover { background-color: rgba(212, 175, 55, 0.05); }
 .badge { display: inline-block; padding: .35em .65em; font-size: .75em; font-weight: 700; line-height: 1; color: var(--text-on-primary); text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: var(--border-radius-sm); }
 .badge-primary { background-color: var(--primary-color); } .badge-secondary { background-color: var(--secondary-color); color: var(--text-color-inverted); } .badge-success { background-color: var(--success-color); color: white; } .badge-danger { background-color: var(--danger-color); color: white; } .badge-warning { background-color: var(--warning-color); color: var(--text-on-primary); }
 [data-theme="light"] .badge-warning { color: var(--text-color); } .badge-info { background-color: var(--info-color); color: white; }
+
+/* --- DASHBOARD LAYOUT --- */
+.dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.dashboard-row {
+  display: flex;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.dashboard-col-two-thirds {
+  flex: 2;
+  min-width: 0;
+}
+
+.dashboard-col-one-third {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 992px) {
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+  
+  .dashboard-row {
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+  
+  .dashboard-col-two-thirds,
+  .dashboard-col-one-third {
+    flex: 1;
+  }
+}
+
+@media (max-width: 576px) {
+  .dashboard-metrics {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+}
+
+/* Chart containers */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+}
+
 .app-header .logo { font-family: var(--font-family-serif); letter-spacing: 1px; }
 .form-control.is-invalid, .form-group select.is-invalid, .form-group textarea.is-invalid { border-color: var(--danger-color) !important; }
 .form-control.is-invalid:focus, .form-group select.is-invalid:focus, .form-group textarea.is-invalid:focus { border-color: var(--danger-color) !important; box-shadow: 0 0 0 0.2rem rgba(178, 34, 34, 0.25) !important; }

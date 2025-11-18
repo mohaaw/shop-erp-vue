@@ -2,14 +2,14 @@
   <div class="recent-activity-widget card">
     <div class="card-header">Recent Activity</div>
     <div class="card-body">
-      <ul v-if="activities.length" class="activity-list">
-        <li v-for="activity in activities" :key="activity.id" class="activity-item">
+      <ul v-if="recentActivities.length" class="activity-list">
+        <li v-for="activity in recentActivities" :key="activity.id" class="activity-item">
           <div class="activity-icon-wrapper" :style="{ backgroundColor: activity.iconBg }">
             <span class="activity-icon" v-html="activity.icon"></span>
           </div>
           <div class="activity-content">
             <p class="activity-text" v-html="activity.text"></p>
-            <small class="activity-time">{{ activity.time }}</small>
+            <small class="activity-time">{{ formatTime(activity.time) }}</small>
           </div>
         </li>
       </ul>
@@ -19,20 +19,83 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed } from 'vue';
+import { useSalesStore } from '@/stores/salesStore';
+import { useProductStore } from '@/stores/productStore';
+import { useCustomerStore } from '@/stores/customerStore';
+
+const salesStore = useSalesStore();
+const productStore = useProductStore();
+const customerStore = useCustomerStore();
 
 const icons = {
   sale: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`,
   product: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>`,
-  customer: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>`
+  customer: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle></svg>`,
+  warning: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3.05h16.94a2 2 0 0 0 1.71-3.05L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
 };
 
-const activities = ref([
-  { id: 1, icon: icons.sale, iconBg: 'var(--success-color)', text: "New sale <strong>#ORD-12346</strong> processed for <strong>$79.99</strong>.", time: "2 minutes ago" },
-  { id: 2, icon: icons.product, iconBg: 'var(--info-color)', text: "Product <strong>'Wireless Ergonomic Mouse'</strong> stock updated.", time: "15 minutes ago" },
-  { id: 3, icon: icons.customer, iconBg: 'var(--primary-color)', text: "New customer <strong>'Alice Wonderland'</strong> registered.", time: "1 hour ago" },
-  { id: 4, icon: icons.product, iconBg: 'var(--warning-color)', text: "Product <strong>'Mechanical Keyboard'</strong> is low on stock (3 units left).", time: "3 hours ago" },
-]);
+const formatTime = (date) => {
+  if (!date) return 'N/A';
+  const now = new Date();
+  const diff = now - new Date(date);
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  
+  return new Date(date).toLocaleDateString();
+};
+
+const recentActivities = computed(() => {
+  const activities = [];
+  
+  // Add recent sales
+  const recentSales = salesStore.sales.slice(-5).reverse();
+  recentSales.forEach(sale => {
+    const customer = customerStore.customers.find(c => c.id === sale.customerId);
+    activities.push({
+      id: `sale-${sale.id}`,
+      icon: icons.sale,
+      iconBg: 'var(--success-color)',
+      text: `New sale <strong>#${sale.id.slice(-6)}</strong> for <strong>${sale.totalAmount.toFixed(2)}</strong> from <strong>${customer?.name || 'Anonymous'}</strong>`,
+      time: sale.date
+    });
+  });
+
+  // Add low stock warnings
+  const lowStockItems = productStore.products
+    .filter(p => p.quantity > 0 && p.quantity <= 5)
+    .slice(-3);
+  lowStockItems.forEach(product => {
+    activities.push({
+      id: `lowstock-${product.id}`,
+      icon: icons.warning,
+      iconBg: 'var(--warning-color)',
+      text: `<strong>${product.model || product.name}</strong> is low on stock (<strong>${product.quantity} units</strong>)`,
+      time: product.updatedAt || new Date()
+    });
+  });
+
+  // Add new customers
+  const recentCustomers = customerStore.customers.slice(-3).reverse();
+  recentCustomers.forEach(customer => {
+    activities.push({
+      id: `customer-${customer.id}`,
+      icon: icons.customer,
+      iconBg: 'var(--primary-color)',
+      text: `New customer <strong>${customer.name}</strong> registered`,
+      time: customer.createdAt
+    });
+  });
+
+  // Sort by time (most recent first) and return top 8
+  return activities.sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 8);
+});
 </script>
 
 <style scoped>

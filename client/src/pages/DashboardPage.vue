@@ -2,6 +2,39 @@
   <div class="dashboard-page">
     <h1 class="page-title">📊 {{ settingsStore.storeName }} Dashboard</h1>
 
+    <!-- KPI Summary Section -->
+    <div class="kpi-summary-section">
+      <div class="metric-card-sm">
+        <div class="metric-label">Average Order Value</div>
+        <div class="metric-value">{{ settingsStore.currencySymbol }}{{ averageOrderValue.toFixed(2) }}</div>
+        <div class="metric-trend" :class="aovTrend >= 0 ? 'positive' : 'negative'">
+          <span v-if="aovTrend >= 0">▲</span><span v-else>▼</span> {{ Math.abs(aovTrend).toFixed(1) }}%
+        </div>
+      </div>
+      <div class="metric-card-sm">
+        <div class="metric-label">Profit Margin</div>
+        <div class="metric-value">{{ profitMargin.toFixed(1) }}%</div>
+        <div class="metric-trend" :class="profitMargin >= 30 ? 'positive' : 'warning'">
+          <span v-if="profitMargin >= 30">✓</span><span v-else>!</span> {{ profitMargin >= 30 ? 'Healthy' : 'Monitor' }}
+        </div>
+      </div>
+      <div class="metric-card-sm">
+        <div class="metric-label">New Customers</div>
+        <div class="metric-value">{{ newCustomersThisWeek }}</div>
+        <div class="metric-trend" :class="newCustomersTrend >= 0 ? 'positive' : 'negative'">
+          <span v-if="newCustomersTrend >= 0">▲</span><span v-else>▼</span> vs last week
+        </div>
+      </div>
+      <div class="metric-card-sm">
+        <div class="metric-label">Repeat Customer Rate</div>
+        <div class="metric-value">{{ repeatCustomerRate.toFixed(1) }}%</div>
+        <div class="metric-trend positive">
+          <span>✓</span> Loyalty
+        </div>
+      </div>
+    </div>
+
+    <!-- Main KPI Cards -->
     <div class="dashboard-metrics">
       <StatCard
         title="Total Revenue"
@@ -9,9 +42,9 @@
         :prefixUnit="settingsStore.currencySymbol"
         :iconHtml="icons.revenue"
         color="var(--success-color)"
-        change="+0%"
-        changeType="neutral"
-        changePeriod="this period"
+        :change="revenueChangePercent.toFixed(1) + '%'"
+        :changeType="revenueChangePercent >= 0 ? 'positive' : 'negative'"
+        changePeriod="vs last week"
         footerText="View Sales Reports"
         footerLink="/sales"
       />
@@ -20,9 +53,9 @@
         :value="salesStore.totalSalesRecords"
         :iconHtml="icons.orders"
         color="var(--info-color)"
-        change="+0"
-        changeType="neutral"
-        changePeriod="this period"
+        :change="ordersChangePercent.toFixed(1) + '%'"
+        :changeType="ordersChangePercent >= 0 ? 'positive' : 'negative'"
+        changePeriod="vs last week"
         footerText="View Orders"
         footerLink="/sales"
       />
@@ -43,6 +76,7 @@
       />
     </div>
 
+    <!-- Health Metrics -->
     <div class="dashboard-metrics">
       <StatCard
         title="Low Stock Items"
@@ -56,6 +90,8 @@
         title="Out of Stock Items"
         :value="productStore.outOfStockItems.length"
         :iconHtml="icons.outOfStock"
+        :change="outOfStockChange"
+        :changeType="outOfStockItems.length > previousOutOfStockCount ? 'negative' : 'positive'"
         color="var(--danger-color)"
         footerText="View Out of Stock"
         :footerLink="{ path: '/products', query: { filter: 'outofstock' } }"
@@ -65,6 +101,8 @@
         :value="customerStore.customers.length"
         :iconHtml="icons.customers"
         color="#3498DB"
+        :change="customerChangePercent.toFixed(1) + '%'"
+        :changeType="customerChangePercent >= 0 ? 'positive' : 'negative'"
         footerText="Manage Customers"
         footerLink="/customers"
       />
@@ -74,6 +112,9 @@
         :prefixUnit="settingsStore.currencySymbol"
         :iconHtml="icons.profit"
         color="var(--success-color)"
+        :change="profitChangePercent.toFixed(1) + '%'"
+        :changeType="profitChangePercent >= 0 ? 'positive' : 'negative'"
+        changePeriod="vs last week"
       />
     </div>
 
@@ -293,9 +334,100 @@ watch([
 
 const LOW_STOCK_THRESHOLD = computed(() => settingsStore.lowStockThreshold);
 
-const lowStockItems = computed(() => {
-  return productStore.products.filter(p => typeof p.quantity === 'number' && p.quantity > 0 && p.quantity <= LOW_STOCK_THRESHOLD.value)
-    .sort((a,b) => a.quantity - b.quantity);
+// Trending & Analytics Calculations
+const getDateRangeData = (days) => {
+  const now = new Date();
+  const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  return salesStore.sales.filter(s => new Date(s.date) >= startDate);
+};
+
+const thisWeekSales = computed(() => getDateRangeData(7));
+const lastWeekSales = computed(() => {
+  const now = new Date();
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  return salesStore.sales.filter(s => {
+    const saleDate = new Date(s.date);
+    return saleDate >= twoWeeksAgo && saleDate < oneWeekAgo;
+  });
+});
+
+const revenueChangePercent = computed(() => {
+  const thisWeekRevenue = thisWeekSales.value.reduce((sum, s) => sum + s.totalAmount, 0);
+  const lastWeekRevenue = lastWeekSales.value.reduce((sum, s) => sum + s.totalAmount, 0);
+  if (lastWeekRevenue === 0) return thisWeekRevenue > 0 ? 100 : 0;
+  return ((thisWeekRevenue - lastWeekRevenue) / lastWeekRevenue) * 100;
+});
+
+const ordersChangePercent = computed(() => {
+  const thisWeekOrders = thisWeekSales.value.length;
+  const lastWeekOrders = lastWeekSales.value.length;
+  if (lastWeekOrders === 0) return thisWeekOrders > 0 ? 100 : 0;
+  return ((thisWeekOrders - lastWeekOrders) / lastWeekOrders) * 100;
+});
+
+const profitChangePercent = computed(() => {
+  const thisWeekProfit = thisWeekSales.value.reduce((sum, s) => sum + (s.estimatedProfit || 0), 0);
+  const lastWeekProfit = lastWeekSales.value.reduce((sum, s) => sum + (s.estimatedProfit || 0), 0);
+  if (lastWeekProfit === 0) return thisWeekProfit > 0 ? 100 : 0;
+  return ((thisWeekProfit - lastWeekProfit) / lastWeekProfit) * 100;
+});
+
+const averageOrderValue = computed(() => {
+  if (salesStore.totalSalesRecords === 0) return 0;
+  return salesStore.totalRevenue / salesStore.totalSalesRecords;
+});
+
+const profitMargin = computed(() => {
+  if (salesStore.totalRevenue === 0) return 0;
+  return (salesStore.totalProfit / salesStore.totalRevenue) * 100;
+});
+
+const newCustomersThisWeek = computed(() => {
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  return customerStore.customers.filter(c => {
+    const createdDate = new Date(c.createdAt || Date.now());
+    return createdDate >= oneWeekAgo;
+  }).length;
+});
+
+const newCustomersLastWeek = computed(() => {
+  const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  return customerStore.customers.filter(c => {
+    const createdDate = new Date(c.createdAt || Date.now());
+    return createdDate >= twoWeeksAgo && createdDate < oneWeekAgo;
+  }).length;
+});
+
+const newCustomersTrend = computed(() => {
+  return newCustomersThisWeek.value - newCustomersLastWeek.value;
+});
+
+const customerChangePercent = computed(() => {
+  if (newCustomersLastWeek.value === 0) return newCustomersThisWeek.value > 0 ? 100 : 0;
+  return ((newCustomersThisWeek.value - newCustomersLastWeek.value) / newCustomersLastWeek.value) * 100;
+});
+
+const repeatCustomerRate = computed(() => {
+  if (customerStore.customers.length === 0) return 0;
+  const repeatCustomers = thisWeekSales.value.reduce((set, sale) => {
+    if (sale.customerId) set.add(sale.customerId);
+    return set;
+  }, new Set());
+  return (repeatCustomers.size / customerStore.customers.length) * 100;
+});
+
+const outOfStockItems = computed(() => productStore.outOfStockItems);
+const previousOutOfStockCount = ref(0);
+const outOfStockChange = computed(() => {
+  const current = outOfStockItems.value.length;
+  const change = current - previousOutOfStockCount.value;
+  return change !== 0 ? (change > 0 ? `+${change}` : `${change}`) : 'Stable';
+});
+
+watch(() => outOfStockItems.value.length, (newVal) => {
+  previousOutOfStockCount.value = newVal;
 });
 </script>
 
@@ -304,22 +436,90 @@ const lowStockItems = computed(() => {
   font-family: var(--font-family-sans);
   font-size: 1.75rem;
   border-bottom-width: 2px;
+  margin-bottom: var(--space-lg);
 }
+
+/* KPI Summary Section */
+.kpi-summary-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  padding: var(--space-lg);
+  background: linear-gradient(135deg, var(--card-bg-color), var(--bg-color-offset));
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.metric-card-sm {
+  padding: var(--space-md);
+  background: var(--card-bg-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.metric-card-sm:hover {
+  box-shadow: var(--box-shadow);
+  transform: translateY(-2px);
+}
+
+.metric-label {
+  font-size: 0.85rem;
+  color: var(--text-color-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: var(--space-xs);
+}
+
+.metric-trend {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.metric-trend.positive {
+  color: var(--success-color);
+}
+
+.metric-trend.negative {
+  color: var(--danger-color);
+}
+
+.metric-trend.warning {
+  color: var(--warning-color);
+}
+
 .dashboard-metrics {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: var(--space-lg);
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
 }
+
 .dashboard-row {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-lg);
 }
+
 .dashboard-row > [class*="dashboard-col-"] > .card,
 .dashboard-row > [class*="dashboard-col-"] > div:not(.card) {
   margin-bottom: var(--space-lg);
 }
+
 .dashboard-col-one-third { flex: 1 1 calc(33.333% - var(--space-lg)); min-width: 300px; }
 .dashboard-col-two-thirds { flex: 2 1 calc(66.666% - var(--space-lg)); min-width: 300px; }
 .dashboard-col-one-half { flex: 1 1 calc(50% - var(--space-lg)); min-width: 300px; }
@@ -334,6 +534,7 @@ const lowStockItems = computed(() => {
   box-shadow: var(--box-shadow-sm);
   position: relative;
 }
+
 .card .chart-container {
   border: none;
   box-shadow: none;
@@ -348,4 +549,45 @@ const lowStockItems = computed(() => {
 .text-muted { color: var(--text-color-muted); }
 .mb-2 { margin-bottom: var(--space-sm) !important; }
 .mt-4 { margin-top: var(--space-lg) !important; }
+
+@media (max-width: 1200px) {
+  .dashboard-metrics {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .dashboard-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-summary-section {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .dashboard-row {
+    flex-direction: column;
+  }
+  
+  .dashboard-col-one-third,
+  .dashboard-col-two-thirds {
+    flex: 1;
+  }
+}
+
+@media (max-width: 576px) {
+  .kpi-summary-section {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+  }
+  
+  .metric-card-sm {
+    padding: var(--space-sm);
+  }
+  
+  .metric-value {
+    font-size: 1.3rem;
+  }
+}
 </style>
