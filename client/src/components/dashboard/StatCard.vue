@@ -77,7 +77,7 @@ const changeTypeClass = computed(() => {
   padding: 0.8rem;
   border-radius: 50%;
   color: white;
-  margin-right: 1.2rem;
+  margin-inline-end: 1.2rem;
   width: 56px;
   height: 56px;
   display: flex;

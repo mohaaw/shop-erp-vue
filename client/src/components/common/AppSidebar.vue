@@ -2,9 +2,9 @@
   <aside
     class="app-sidebar"
     :class="{
-      'is-collapsed': isEffectivelyCollapsedForCss, /* Use a more direct computed for class if needed */
+      'is-collapsed': isEffectivelyCollapsedForCss,
       'is-mobile-view': isMobileView,
-      'is-hover-expanded': isHoverExpandedState /* Renamed for clarity from internal ref */
+      'is-hover-expanded': isHoverExpandedState
     }"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
@@ -20,11 +20,11 @@
           <li v-for="item in navigationItems" :key="item.name">
             <router-link v-if="!item.children" :to="item.to" class="nav-item" active-class="is-active" @click="linkClicked(item)">
               <span class="nav-icon" v-html="item.icon"></span>
-              <span class="nav-text">{{ item.name }}</span>
+              <span class="nav-text">{{ $t(item.name) }}</span>
             </router-link>
             <div v-else class="nav-item has-submenu" @click="toggleSubmenu(item.name)" :class="{'submenu-open': isSubmenuDisplayable(item.name)}">
               <span class="nav-icon" v-html="item.icon"></span>
-              <span class="nav-text">{{ item.name }}</span>
+              <span class="nav-text">{{ $t(item.name) }}</span>
               <span class="submenu-arrow" :class="{'arrow-up': openSubmenus[item.name]}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
               </span>
@@ -34,7 +34,7 @@
                 :style="{ maxHeight: isSubmenuDisplayable(item.name) ? '500px' : '0px' }">
               <li v-for="child in item.children" :key="child.name">
                 <router-link :to="child.to" class="nav-item submenu-item" active-class="is-active" @click="linkClicked(child)">
-                  <span class="nav-text">{{ child.name }}</span>
+                  <span class="nav-text">{{ $t(child.name) }}</span>
                 </router-link>
               </li>
             </ul>
@@ -49,63 +49,73 @@
 import { ref, computed, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useUserStore } from '@/stores/userStore';
 
 const props = defineProps({
-  isCollapsed: Boolean, // User's preference for collapsed state (from DefaultLayout)
-  isMobileView: Boolean, // Is the view mobile (from DefaultLayout)
-  // isHoverExpanded prop removed, AppSidebar will manage its internal hover state for expansion
+  isCollapsed: Boolean,
+  isMobileView: Boolean,
 });
 
 const emit = defineEmits(['sidebar-hover-start', 'sidebar-hover-end', 'mobile-sidebar-toggled']);
 
 const settingsStore = useSettingsStore();
+const userStore = useUserStore();
 const route = useRoute();
 const openSubmenus = ref({});
-
-// This ref now specifically tracks if the mouse is currently hovering
-// to expand a user-collapsed sidebar on desktop.
 const isHoverExpandedState = ref(false);
 
-// Determines if the sidebar should appear visually collapsed
 const isEffectivelyCollapsedForCss = computed(() => {
   if (props.isMobileView) {
-    return props.isCollapsed; // On mobile, collapsed prop directly means hidden/closed
+    return props.isCollapsed;
   }
-  // On desktop, it's collapsed if user set it AND not currently hover-expanded
   return props.isCollapsed && !isHoverExpandedState.value;
 });
 
-// Determines if the profile area should be shown
 const showProfileArea = computed(() => {
-  if (props.isMobileView) return !props.isCollapsed; // Show if mobile sidebar is open
-  return !props.isCollapsed || isHoverExpandedState.value; // Show if desktop expanded OR hover-expanded
+  if (props.isMobileView) return !props.isCollapsed;
+  return !props.isCollapsed || isHoverExpandedState.value;
 });
-
 
 const icons = {
   dashboard: `📊`, products: `📦`, customers: `👥`, pos: `🛒`, sales: `📈`,
   reports: `📋`,
-  settings: `⚙️`
+  settings: `⚙️`,
+  inventory: `🏭`,
+  suppliers: `🚚`,
+  employees: `👔`,
+  admin: `🛡️`
 };
 
-const navigationItems = ref([
-  { name: 'Dashboard', to: '/', icon: icons.dashboard },
-  {
-    name: 'Products', icon: icons.products,
-    children: [ { name: 'View Products', to: '/products' }, { name: 'Add Product', to: '/products/add' } ]
-  },
-  { name: 'Customers', to: '/customers', icon: icons.customers },
-  { name: 'Point of Sale', to: '/pos', icon: icons.pos },
-  { name: 'Sales History', to: '/sales', icon: icons.sales },
-  { name: 'Reports Center', to: '/reports', icon: icons.reports },
-  { name: 'Settings', to: '/settings', icon: icons.settings },
-]);
+const navigationItems = computed(() => {
+  const items = [
+    { name: 'common.dashboard', to: '/', icon: icons.dashboard },
+    {
+      name: 'common.products', icon: icons.products,
+      children: [ { name: 'common.products', to: '/products' }, { name: 'common.add', to: '/products/add' } ]
+    },
+    {
+      name: 'common.inventory', icon: icons.inventory,
+      children: [ { name: 'common.inventory', to: '/inventory' }, { name: 'common.transfers', to: '/transfers' } ]
+    },
+    { name: 'common.suppliers', to: '/suppliers', icon: icons.suppliers },
+    { name: 'common.customers', to: '/customers', icon: icons.customers },
+    { name: 'common.employees', to: '/employees', icon: icons.employees },
+    { name: 'common.pos', to: '/pos', icon: icons.pos },
+    { name: 'common.sales', to: '/sales', icon: icons.sales },
+    { name: 'common.reports', to: '/reports', icon: icons.reports },
+    { name: 'common.settings', to: '/settings', icon: icons.settings },
+  ];
+
+  if (userStore.isAdmin) {
+    items.push({ name: 'admin.title', to: '/admin', icon: icons.admin });
+  }
+
+  return items;
+});
 
 const toggleSubmenu = (itemName) => {
-  // If on desktop, collapsed, and not yet hover-expanded, trigger hover expansion first
   if (!props.isMobileView && props.isCollapsed && !isHoverExpandedState.value) {
-    handleMouseEnter(); // Simulate hover start to expand
-    // Then toggle submenu after a brief delay for visual expansion
+    handleMouseEnter();
     setTimeout(() => {
       openSubmenus.value[itemName] = !openSubmenus.value[itemName];
     }, 50);
@@ -114,29 +124,22 @@ const toggleSubmenu = (itemName) => {
   }
 };
 
-// Determines if a submenu's content should be rendered and visible
 const isSubmenuDisplayable = (itemName) => {
-  if (props.isMobileView && props.isCollapsed) return false; // Hidden if mobile sidebar is closed
-  if (!props.isMobileView && props.isCollapsed && !isHoverExpandedState.value) return false; // Hidden if desktop collapsed & not hovered
-  return !!openSubmenus.value[itemName]; // Otherwise, depends on its toggle state
+  if (props.isMobileView && props.isCollapsed) return false;
+  if (!props.isMobileView && props.isCollapsed && !isHoverExpandedState.value) return false;
+  return !!openSubmenus.value[itemName];
 };
 
 const linkClicked = (item) => {
   if(props.isMobileView){
-    emit('mobile-sidebar-toggled'); // Signal parent to close mobile sidebar
+    emit('mobile-sidebar-toggled');
   }
-  // If not a parent item, close all other submenus (optional behavior)
   if (!item.children) {
     Object.keys(openSubmenus.value).forEach(key => {
       const navItem = navigationItems.value.find(nav => nav.name === key);
       let isParentOfCurrent = false;
       if (navItem && navItem.children) {
         isParentOfCurrent = navItem.children.some(child => route.path === child.to || (child.to !== '/' && route.path.startsWith(child.to)));
-      }
-      if (!isParentOfCurrent) { // Close other submenus not related to current active path
-        // This might be too aggressive if navigating within same parent.
-        // Better: auto-open current parent, explicitly close others on link click.
-        // For now, clicking a direct link doesn't force-close other submenus.
       }
     });
   }
@@ -145,25 +148,23 @@ const linkClicked = (item) => {
 const handleMouseEnter = () => {
   if(!props.isMobileView && props.isCollapsed){
     isHoverExpandedState.value = true;
-    emit('sidebar-hover-start'); // Let parent know for potential main content margin adjustment
+    emit('sidebar-hover-start');
   }
 }
 const handleMouseLeave = () => {
   if(!props.isMobileView && props.isCollapsed){
     isHoverExpandedState.value = false;
     emit('sidebar-hover-end');
-    // Close all submenus when hover ends and it was user-collapsed
     Object.keys(openSubmenus.value).forEach(key => {
       openSubmenus.value[key] = false;
     });
   }
 }
 
-// When sidebar is externally forced to collapse (e.g., by parent), reset hover state and close submenus
 watch(() => props.isCollapsed, (newValIsCollapsed) => {
   if (newValIsCollapsed) {
-    isHoverExpandedState.value = false; // Reset hover effect
-    if (!props.isMobileView) { // Only close all submenus if collapsed on desktop
+    isHoverExpandedState.value = false;
+    if (!props.isMobileView) {
       Object.keys(openSubmenus.value).forEach(key => {
         openSubmenus.value[key] = false;
       });
@@ -171,20 +172,16 @@ watch(() => props.isCollapsed, (newValIsCollapsed) => {
   }
 });
 
-// When switching to mobile view, reset hover state
 watch(() => props.isMobileView, (newIsMobile) => {
   if (newIsMobile) {
     isHoverExpandedState.value = false;
-    // If mobile view becomes active AND sidebar is marked as "open" (isCollapsed=false for mobile)
-    // ensure submenus related to current route are open
     if (!props.isCollapsed) {
       autoOpenActiveSubmenu(route);
     }
   } else {
-    // Switched to desktop view, re-evaluate active submenus based on expanded state
-    if (!props.isCollapsed) { // If desktop sidebar is expanded
+    if (!props.isCollapsed) {
       autoOpenActiveSubmenu(route);
-    } else { // Desktop sidebar is collapsed, close all
+    } else {
       Object.keys(openSubmenus.value).forEach(key => {
         openSubmenus.value[key] = false;
       });
@@ -201,17 +198,12 @@ const autoOpenActiveSubmenu = (currentRoute) => {
       );
       if (isChildActive) {
         openSubmenus.value[item.name] = true;
-      } else if (openSubmenus.value[item.name] && !isChildActive) {
-        // Optionally close if no child is active, unless manually kept open
-        // For now, we only auto-open. User can manually close.
       }
     }
   });
 };
 
-// Auto-open parent submenu if a child route is active on initial load or direct navigation
 watch(route, (currentRoute) => {
-  // Only auto-open if not collapsed and not on mobile (or if mobile and sidebar is open)
   if ((!props.isMobileView && !props.isCollapsed) || (props.isMobileView && !props.isCollapsed) || isHoverExpandedState.value) {
     autoOpenActiveSubmenu(currentRoute);
   }
@@ -219,22 +211,23 @@ watch(route, (currentRoute) => {
 </script>
 
 <style scoped>
-/* Styles from previous AppSidebar.vue version, ensure they match main.css needs */
 .app-sidebar {
   width: 260px; background-color: var(--nav-bg-color); color: var(--nav-text-color);
-  border-right: 1px solid var(--border-color);
+  border-inline-end: 1px solid var(--border-color);
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden; flex-shrink: 0; display: flex; flex-direction: column;
 }
 .app-sidebar.is-mobile-view {
-  position: fixed; left: 0; top: 0; height: 100vh; z-index: 1030;
+  position: fixed; inset-inline-start: 0; top: 0; height: 100vh; z-index: 1030;
   transform: translateX(-100%);
 }
-.app-sidebar.is-mobile-view:not(.is-collapsed) { /* is-collapsed on mobile means "is closed" */
+[dir="rtl"] .app-sidebar.is-mobile-view {
+  transform: translateX(100%);
+}
+.app-sidebar.is-mobile-view:not(.is-collapsed) {
   transform: translateX(0%); width: 260px !important;
 }
 
-/* Desktop collapsed state - controlled by isEffectivelyCollapsedForCss */
 .app-sidebar:not(.is-mobile-view).is-collapsed { width: 70px; }
 .app-sidebar:not(.is-mobile-view).is-collapsed .nav-text,
 .app-sidebar:not(.is-mobile-view).is-collapsed .submenu-arrow,
@@ -243,11 +236,10 @@ watch(route, (currentRoute) => {
 }
 .app-sidebar:not(.is-mobile-view).is-collapsed .nav-item,
 .app-sidebar:not(.is-mobile-view).is-collapsed .nav-icon {
-  justify-content: center; padding-left: 0; padding-right: 0;
+  justify-content: center; padding-inline-start: 0; padding-inline-end: 0;
 }
 .app-sidebar:not(.is-mobile-view).is-collapsed .submenu { display: none !important; }
 
-/* Desktop hover-expanded state - controlled by is-hover-expanded class */
 .app-sidebar:not(.is-mobile-view).is-hover-expanded {
   width: 260px; box-shadow: var(--box-shadow-strong); z-index: 1010;
 }
@@ -284,17 +276,17 @@ watch(route, (currentRoute) => {
   color: var(--nav-active-text) !important; stroke: var(--nav-active-text) !important;
 }
 .nav-icon {
-  margin-right: var(--space-md); display: flex; align-items: center;
+  margin-inline-end: var(--space-md); display: flex; align-items: center;
   min-width: 24px; font-size: 1.2em;
   transition: color 0.2s, margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--nav-text-color);
 }
 .nav-icon svg { width: 20px; height: 20px; stroke: currentColor; }
 .nav-text { flex-grow: 1; opacity: 1; transition: opacity 0.1s 0.1s linear; font-size: 0.95rem; }
-.submenu-arrow { margin-left: auto; transition: transform 0.2s ease, opacity 0.1s 0.1s linear; }
+.submenu-arrow { margin-inline-start: auto; transition: transform 0.2s ease, opacity 0.1s 0.1s linear; }
 .submenu-arrow.arrow-up svg { transform: rotate(180deg); }
 .submenu {
-  list-style: none; padding-left: calc(var(--space-md) + 24px + var(--space-xs) - var(--space-sm));
+  list-style: none; padding-inline-start: calc(var(--space-md) + 24px + var(--space-xs) - var(--space-sm));
   max-height: 0px; overflow: hidden;
   transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
   opacity: 0;

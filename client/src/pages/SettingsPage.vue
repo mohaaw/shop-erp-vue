@@ -22,15 +22,34 @@
     <div v-show="activeTab === 'general'" class="settings-section">
       <!-- Appearance Settings -->
       <div class="card">
-        <div class="card-header">🎨 Appearance & Theme</div>
+        <div class="card-header">🎨 {{ $t('settings.appearance') }}</div>
         <div class="card-body">
           <div class="settings-row">
             <div class="settings-left">
-              <h4 class="setting-title">Interface Theme</h4>
-              <p class="setting-description">Choose between light and dark mode. Your preference is saved automatically.</p>
+              <h4 class="setting-title">{{ $t('settings.theme_light') }} / {{ $t('settings.theme_dark') }}</h4>
+              <p class="setting-description">Choose between light and dark mode.</p>
             </div>
             <div class="settings-right">
               <ThemeSwitcher class="theme-switcher-inline" />
+            </div>
+          </div>
+          
+          <hr class="my-4 border-gray-200 dark:border-gray-700">
+
+          <div class="settings-row">
+            <div class="settings-left">
+              <h4 class="setting-title">{{ $t('settings.language') }}</h4>
+              <p class="setting-description">Select your preferred language.</p>
+            </div>
+            <div class="settings-right">
+              <select 
+                v-model="settingsStore.locale" 
+                @change="settingsStore.setLocale($event.target.value)"
+                class="form-control w-auto"
+              >
+                <option value="en">🇺🇸 English</option>
+                <option value="ar">🇸🇦 العربية</option>
+              </select>
             </div>
           </div>
         </div>

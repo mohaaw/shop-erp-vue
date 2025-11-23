@@ -10,9 +10,10 @@ export const useCartStore = defineStore('cart', {
     items: [], // Array of { productIdInternal, model, quantity, priceAtSale, basePriceAtSale }
     customerId: null,
     customerName: 'Anonymous',
+    locationId: 3, // Default to Shop 1, but should be set by POSPage
     discountPercentage: 0,
     notes: '',
-    isProcessingCheckout: false, // To manage loading state for checkout
+    isProcessingCheckout: false,
   }),
   getters: {
     itemCount: (state) => {
@@ -43,19 +44,22 @@ export const useCartStore = defineStore('cart', {
       const productStore = useProductStore();
       const productInStore = productStore.getProductById(product.idInternal);
 
-      if (!productInStore || productInStore.quantity <= 0) {
-        console.warn(`CartStore: Product ${product.model} is out of stock or not found in store.`);
-        return { success: false, message: `${product.model} is out of stock.` };
+      // Check stock for the CURRENT location
+      const stockInLocation = productStore.getStockForLocation(product.idInternal, this.locationId);
+
+      if (!productInStore || stockInLocation <= 0) {
+        console.warn(`CartStore: Product ${product.model} is out of stock in location ${this.locationId}.`);
+        return { success: false, message: `${product.model} is out of stock in this location.` };
       }
 
       const existingItem = this.findItemInCart(product.idInternal);
 
       if (existingItem) {
-        if (existingItem.quantity < productInStore.quantity) {
+        if (existingItem.quantity < stockInLocation) {
           existingItem.quantity++;
           return { success: true, message: `${product.model} quantity updated in cart.` };
         } else {
-          console.warn(`CartStore: Cannot add more ${product.model}. Max stock (${productInStore.quantity}) reached in cart.`);
+          console.warn(`CartStore: Cannot add more ${product.model}. Max stock (${stockInLocation}) reached in cart.`);
           return { success: false, message: `Max stock reached for ${product.model}.` };
         }
       } else {
@@ -82,6 +86,7 @@ export const useCartStore = defineStore('cart', {
       const productInStore = productStore.getProductById(productIdInternal);
       if (!productInStore) return { success: false, message: "Product details not found for stock check." };
 
+      const stockInLocation = productStore.getStockForLocation(productIdInternal, this.locationId);
       const quantity = parseInt(newQuantity, 10);
 
       if (isNaN(quantity) || quantity < 0) {
@@ -91,9 +96,9 @@ export const useCartStore = defineStore('cart', {
         this.removeItem(productIdInternal);
         return { success: true, message: "Item removed due to zero quantity." };
       }
-      if (quantity > productInStore.quantity) {
-        this.items[itemIndex].quantity = productInStore.quantity; // Cap at max stock
-        return { success: false, message: `Quantity for ${this.items[itemIndex].model} capped at max available stock (${productInStore.quantity}).` };
+      if (quantity > stockInLocation) {
+        this.items[itemIndex].quantity = stockInLocation; // Cap at max stock
+        return { success: false, message: `Quantity for ${this.items[itemIndex].model} capped at max available stock (${stockInLocation}).` };
       }
 
       this.items[itemIndex].quantity = quantity;
@@ -103,10 +108,10 @@ export const useCartStore = defineStore('cart', {
       const discount = parseFloat(percentage);
       if (!isNaN(discount) && discount >= 0 && discount <= 100) {
         this.discountPercentage = discount;
-        return { success: true, message: `Discount set to ${discount}%.`};
+        return { success: true, message: `Discount set to ${discount}%.` };
       } else {
         this.discountPercentage = 0;
-        return { success: false, message: "Invalid discount percentage. Reset to 0%."};
+        return { success: false, message: "Invalid discount percentage. Reset to 0%." };
       }
     },
     assignCustomer(customer) {
@@ -117,6 +122,9 @@ export const useCartStore = defineStore('cart', {
         this.customerId = null;
         this.customerName = 'Anonymous';
       }
+    },
+    setLocation(id) {
+      this.locationId = id;
     },
     setSaleNotes(notes) {
       this.notes = notes;
@@ -135,12 +143,12 @@ export const useCartStore = defineStore('cart', {
       }
       this.isProcessingCheckout = true;
       const salesStore = useSalesStore();
-      // productStore and customerStore are accessed within salesStore.addSale
 
       const saleDataPayload = {
         customerId: this.customerId,
         customerName: this.customerName,
-        items: JSON.parse(JSON.stringify(this.items)), // Send a deep copy
+        locationId: this.locationId, // Pass location ID
+        items: JSON.parse(JSON.stringify(this.items)),
         subtotalAmount: this.subtotal,
         discountPercentage: this.discountPercentage,
         discountAmount: this.discountAmount,

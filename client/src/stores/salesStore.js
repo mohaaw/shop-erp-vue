@@ -39,7 +39,7 @@ export const useSalesStore = defineStore('sales', {
     dailySalesAndProfit: (state) => (numberOfDays = 7) => {
       const dailyData = {};
       const today = new Date();
-      today.setHours(0,0,0,0);
+      today.setHours(0, 0, 0, 0);
 
       for (let i = 0; i < numberOfDays; i++) {
         const d = new Date(today);
@@ -50,7 +50,7 @@ export const useSalesStore = defineStore('sales', {
 
       state.sales.forEach(sale => {
         const saleDate = new Date(sale.date);
-        saleDate.setHours(0,0,0,0);
+        saleDate.setHours(0, 0, 0, 0);
         const saleDateKey = saleDate.toISOString().split('T')[0];
 
         if (dailyData[saleDateKey] !== undefined) {
@@ -59,7 +59,7 @@ export const useSalesStore = defineStore('sales', {
           dailyData[saleDateKey].count += 1;
         }
       });
-      return Object.values(dailyData).sort((a,b) => a.date - b.date); // Oldest first for charts
+      return Object.values(dailyData).sort((a, b) => a.date - b.date); // Oldest first for charts
     },
 
     topSellingProductsByQuantity: (state) => (limit = 5) => {
@@ -82,13 +82,13 @@ export const useSalesStore = defineStore('sales', {
         });
       });
       return Object.values(productSales)
-        .sort((a,b) => b.quantity - a.quantity)
+        .sort((a, b) => b.quantity - a.quantity)
         .slice(0, limit);
     },
 
     getSalesInDateRange: (state) => (startDate, endDate) => {
       if (!startDate || !endDate) {
-        return [...state.sales].sort((a,b) => new Date(a.date) - new Date(b.date));
+        return [...state.sales].sort((a, b) => new Date(a.date) - new Date(b.date));
       }
       const start = new Date(startDate); start.setHours(0, 0, 0, 0);
       const end = new Date(endDate); end.setHours(23, 59, 59, 999);
@@ -122,10 +122,18 @@ export const useSalesStore = defineStore('sales', {
         this.isLoading = false;
       }
     },
-    async addSale(saleData) { // Expects: { customerId?, customerName?, items, subtotalAmount, discountPercentage?, discountAmount?, totalAmount, notes? }
+    async addSale(saleData) { // Expects: { customerId?, customerName?, items, subtotalAmount, discountPercentage?, discountAmount?, totalAmount, notes?, locationId }
       this.isLoading = true; this.error = null;
       const productStore = useProductStore();
       const customerStore = useCustomerStore();
+
+      if (!saleData.locationId) {
+        console.warn("SalesStore: No locationId provided for sale. Defaulting to 3 (Shop 1) or throwing error?");
+        // For safety/legacy, maybe default, but better to enforce.
+        // Let's enforce it if possible, or default to 3 (Shop 1) for now to prevent crashes if I missed a spot.
+        saleData.locationId = 3;
+      }
+
       try {
         const newSaleItems = saleData.items.map(item => {
           const product = productStore.getProductById(item.productIdInternal);
@@ -147,13 +155,14 @@ export const useSalesStore = defineStore('sales', {
           return sum + ((item.priceAtSale - item.basePriceAtSale) * item.quantity);
         }, 0);
 
-        const saleDate = saleData.dateForSeeding ? new Date(saleData.dateForSeeding) : new Date(); // Use provided date for seeding
+        const saleDate = saleData.dateForSeeding ? new Date(saleData.dateForSeeding) : new Date();
 
         const newSale = {
-          id: `SALE_VUE_${saleDate.getTime()}_${Math.random().toString(36).substring(2, 7)}`, // Use saleDate for ID consistency
+          id: `SALE_VUE_${saleDate.getTime()}_${Math.random().toString(36).substring(2, 7)}`,
           date: saleDate.toISOString(),
           customerId: saleData.customerId || null,
           customerName: saleData.customerName || 'Anonymous',
+          locationId: saleData.locationId, // Store location ID on sale record
           items: newSaleItems,
           subtotalAmount: parseFloat(calculatedSubtotal.toFixed(2)),
           discountPercentage: parseFloat(discountPercentage.toFixed(2)),
@@ -161,7 +170,7 @@ export const useSalesStore = defineStore('sales', {
           totalAmount: parseFloat(calculatedTotalAmount.toFixed(2)),
           notes: saleData.notes || '',
           estimatedProfit: parseFloat(estimatedProfit.toFixed(2)),
-          createdAt: new Date().toISOString(), // Actual creation timestamp
+          createdAt: new Date().toISOString(),
         };
 
         this.sales.unshift(newSale);
@@ -170,7 +179,8 @@ export const useSalesStore = defineStore('sales', {
           productIdInternal: item.productIdInternal,
           quantitySold: item.quantity
         }));
-        await productStore.updateStockFromSale(itemsToUpdateStock, newSale.id);
+        // Pass locationId to updateStockFromSale
+        await productStore.updateStockFromSale(itemsToUpdateStock, newSale.id, saleData.locationId);
 
         if (newSale.customerId) {
           customerStore.updateCustomerTotalSpent(newSale.customerId, newSale.totalAmount);

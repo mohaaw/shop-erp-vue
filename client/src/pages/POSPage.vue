@@ -2,7 +2,15 @@
   <div class="pos-page">
     <div class="page-header d-flex justify-content-between align-items-center mb-3">
       <h1 class="page-title">🛒 Point of Sale</h1>
-      <div>
+      <div class="flex gap-4 items-center">
+        <div class="flex items-center gap-2">
+           <label class="font-bold">Location:</label>
+           <select v-model="selectedLocationId" class="form-control form-control-sm w-48">
+             <option v-for="loc in locationStore.locations" :key="loc.id" :value="loc.id">
+               {{ loc.name }}
+             </option>
+           </select>
+        </div>
         <button class="btn btn-sm btn-light" @click="refreshAllData" :disabled="isLoadingData" title="Refresh product and customer lists">
           <span v-if="isLoadingData"><div class="loader-btn-inline"></div></span>
           <span v-else>🔄</span> Refresh Data
@@ -151,9 +159,9 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useProductStore } from '@/stores/productStore';
 import { useCustomerStore } from '@/stores/customerStore';
 import { useCartStore } from '@/stores/cartStore';
-// salesStore is used indirectly by cartStore.processCheckout
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useToastStore } from '@/stores/toastStore';
+import { useLocationStore } from '@/stores/locationStore';
 import POSProductCard from '@/components/pos/POSProductCard.vue';
 import SaleConfirmationModal from '@/components/pos/SaleConfirmationModal.vue';
 
@@ -162,13 +170,28 @@ const customerStore = useCustomerStore();
 const cartStore = useCartStore();
 const settingsStore = useSettingsStore();
 const toastStore = useToastStore();
+const locationStore = useLocationStore();
 
 const productSearchTerm = ref('');
-const isLoadingData = ref(false); // For initial data load or manual refresh
-const initialProductLoadAttempted = ref(false); // To show loader only on first product load
+const isLoadingData = ref(false); 
+const initialProductLoadAttempted = ref(false);
 
 const isSaleConfirmationVisible = ref(false);
 const lastProcessedSale = ref(null);
+
+// Sync location
+const selectedLocationId = computed({
+  get: () => locationStore.currentLocationId,
+  set: (val) => {
+    locationStore.setLocation(val);
+    cartStore.setLocation(val);
+  }
+});
+
+// Initialize cart location on mount
+onMounted(() => {
+  cartStore.setLocation(locationStore.currentLocationId);
+});
 
 const selectedCustomerId = computed({
   get: () => cartStore.customerId,
@@ -193,8 +216,7 @@ const filteredProductsForDisplay = computed(() => {
 });
 
 const getProductStock = (productIdInternal) => {
-  const product = productStore.getProductById(productIdInternal);
-  return product ? product.quantity : 0;
+  return productStore.getStockForLocation(productIdInternal, selectedLocationId.value);
 };
 
 const handleAddToCart = (product) => {

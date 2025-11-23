@@ -1,0 +1,57 @@
+{
+    "common": {
+        "dashboard": "لوحة التحكم",
+        "products": "المنتجات",
+        "inventory": "المخزون",
+        "transfers": "التحويلات",
+        "suppliers": "الموردين",
+        "customers": "العملاء",
+        "employees": "الموظفين",
+        "pos": "نقطة البيع",
+        "sales": "سجل المبيعات",
+        "reports": "التقارير",
+        "settings": "الإعدادات",
+        "save": "حفظ",
+        "cancel": "إلغاء",
+        "delete": "حذف",
+        "edit": "تعديل",
+        "add": "إضافة",
+        "search": "بحث...",
+        "loading": "جاري التحميل...",
+        "actions": "إجراءات"
+    },
+    "dashboard": {
+        "title": "لوحة التحكم",
+        "edit_dashboard": "تعديل اللوحة",
+        "done_editing": "إنهاء التعديل",
+        "reset_layout": "إعادة تعيين",
+        "revenue": "إجمالي الإيرادات",
+        "orders": "إجمالي الطلبات",
+        "stock_value": "قيمة المخزون",
+        "profit_margin": "هامش الربح",
+        "new_customers": "عملاء جدد",
+        "repeat_rate": "معدل التكرار"
+    },
+    "settings": {
+        "title": "الإعدادات والتكوين",
+        "subtitle": "إدارة متجرك وتفضيلاتك وبيانات التطبيق",
+        "general": "عام",
+        "data": "إدارة البيانات",
+        "system": "النظام",
+        "appearance": "المظهر والسمة",
+        "theme_light": "فاتح",
+        "theme_dark": "داكن",
+        "language": "اللغة",
+        "store_info": "معلومات المتجر",
+        "store_name": "اسم المتجر",
+        "store_address": "عنوان المتجر",
+        "currency": "رمز العملة"
+    },
+    "admin": {
+        "title": "لوحة تحكم المسؤول",
+        "system_status": "حالة النظام",
+        "user_management": "إدارة المستخدمين",
+        "system_logs": "سجلات النظام",
+        "advanced_settings": "إعدادات متقدمة"
+    }
+}

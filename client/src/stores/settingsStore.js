@@ -8,6 +8,8 @@ import { useSalesStore } from './salesStore';
 // import { useCartStore } from './cartStore';
 
 
+import i18n from '../i18n';
+
 const LS_PREFIX = 'shopErpVUE_';
 const DEFAULT_SETTINGS = {
   storeName: "Tech Store Pro Max",
@@ -17,6 +19,7 @@ const DEFAULT_SETTINGS = {
   currencySymbol: "$",
   theme: "light",
   lowStockThreshold: 5,
+  locale: "en",
 };
 
 export const useSettingsStore = defineStore('settings', {
@@ -26,6 +29,7 @@ export const useSettingsStore = defineStore('settings', {
       ...DEFAULT_SETTINGS,
       ...(loadedSettings || {}),
       theme: (loadedSettings && loadedSettings.theme) ? loadedSettings.theme : DEFAULT_SETTINGS.theme,
+      locale: (loadedSettings && loadedSettings.locale) ? loadedSettings.locale : DEFAULT_SETTINGS.locale,
     };
   },
   actions: {
@@ -38,6 +42,7 @@ export const useSettingsStore = defineStore('settings', {
         currencySymbol: this.currencySymbol,
         theme: this.theme,
         lowStockThreshold: this.lowStockThreshold,
+        locale: this.locale,
       };
       localStorage.setItem(LS_PREFIX + 'appSettings', JSON.stringify(settingsToSave));
     },
@@ -46,12 +51,23 @@ export const useSettingsStore = defineStore('settings', {
       document.documentElement.setAttribute('data-theme', this.theme);
       this.saveSettings();
     },
+    setLocale(newLocale) {
+      this.locale = newLocale;
+      i18n.global.locale.value = newLocale;
+      document.documentElement.setAttribute('lang', newLocale);
+      document.documentElement.setAttribute('dir', newLocale === 'ar' ? 'rtl' : 'ltr');
+      this.saveSettings();
+    },
     toggleTheme() {
       const newTheme = this.theme === 'light' ? 'dark' : 'light';
       this.setTheme(newTheme);
     },
     initializeTheme() {
       document.documentElement.setAttribute('data-theme', this.theme);
+      // Initialize Locale as well
+      i18n.global.locale.value = this.locale;
+      document.documentElement.setAttribute('lang', this.locale);
+      document.documentElement.setAttribute('dir', this.locale === 'ar' ? 'rtl' : 'ltr');
     },
     updateStoreInfo({ name, address, email, phone }) {
       this.storeName = name || this.storeName;

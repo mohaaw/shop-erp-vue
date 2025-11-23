@@ -1,7 +1,8 @@
 // src/stores/productStore.js
 import { defineStore } from 'pinia';
 import { useSettingsStore } from './settingsStore';
-import { useStockMovementStore } from './stockMovementStore'; // For logging stock changes
+import { useStockMovementStore } from './stockMovementStore';
+import { useLocationStore } from './locationStore';
 
 const LS_PRODUCTS_KEY = 'shopErpVUE_products';
 const LS_SEEDED_PRODUCTS_KEY = 'shopErpVUE_seeded_products';
@@ -9,6 +10,15 @@ const LS_SEEDED_PRODUCTS_KEY = 'shopErpVUE_seeded_products';
 // Helper to create a full product object with defaults
 const createFullProductObject = (data = {}) => {
   const now = new Date().toISOString();
+  // Ensure stockByLocation exists. If migrating from old data, put all 'quantity' into a default location (e.g., Shop 1 or Warehouse)
+  // For simplicity, if stockByLocation is missing, we'll assign existing quantity to location 3 (Shop 1) as a default migration strategy.
+  let stockByLocation = data.stockByLocation || {};
+
+  // Migration logic: if quantity exists but stockByLocation doesn't, migrate it.
+  if (!data.stockByLocation && typeof data.quantity === 'number' && data.quantity > 0) {
+    stockByLocation = { 3: data.quantity }; // Default to Shop 1
+  }
+
   return {
     idInternal: data.idInternal || `prod_vue_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     no: data.no || '', // SKU
@@ -21,7 +31,11 @@ const createFullProductObject = (data = {}) => {
     gen: data.gen || '',
     screen_touch: data.screen_touch || false,
     ram: data.ram || '',
-    quantity: parseInt(data.quantity, 10) >= 0 ? parseInt(data.quantity, 10) : 0,
+    // quantity is now a computed property in the app, but we store a cached total for performance/sorting if needed.
+    // However, to avoid sync issues, we should rely on stockByLocation.
+    // For backward compatibility with existing code that reads .quantity, we can keep it as a sum.
+    quantity: calculateTotalStock(stockByLocation),
+    stockByLocation: stockByLocation,
     hdd: data.hdd || '',
     ssd: data.ssd || '',
     vga_type: data.vga_type || '',
@@ -43,6 +57,11 @@ const createFullProductObject = (data = {}) => {
   };
 };
 
+const calculateTotalStock = (stockByLocation) => {
+  if (!stockByLocation) return 0;
+  return Object.values(stockByLocation).reduce((sum, qty) => sum + (parseInt(qty) || 0), 0);
+};
+
 
 export const useProductStore = defineStore('products', {
   state: () => ({
@@ -53,56 +72,71 @@ export const useProductStore = defineStore('products', {
   }),
   getters: {
     filteredProducts: (state) => {
-      if (!state.searchTerm) return state.products.slice().sort((a,b) => (a.model || '').localeCompare(b.model || '')); // Default sort by model
+      if (!state.searchTerm) return state.products.slice().sort((a, b) => (a.model || '').localeCompare(b.model || ''));
       const lowerSearchTerm = state.searchTerm.toLowerCase();
       return state.products.filter(product =>
         Object.values(product).some(value =>
           String(value).toLowerCase().includes(lowerSearchTerm)
         )
-      ).sort((a,b) => (a.model || '').localeCompare(b.model || ''));
+      ).sort((a, b) => (a.model || '').localeCompare(b.model || ''));
     },
     getProductById: (state) => (idInternal) => {
       return state.products.find(product => product.idInternal === idInternal);
     },
     lowStockItems: (state) => {
       const settingsStore = useSettingsStore();
-      return state.products.filter(p => typeof p.quantity === 'number' && p.quantity > 0 && p.quantity <= settingsStore.lowStockThreshold).sort((a, b) => a.quantity - b.quantity);
+      // Check total quantity for now, or per location? Usually total.
+      return state.products.filter(p => p.quantity > 0 && p.quantity <= settingsStore.lowStockThreshold).sort((a, b) => a.quantity - b.quantity);
     },
     outOfStockItems: (state) => state.products.filter(p => p.quantity === 0),
-    totalStockValue: (state) => { // This is by selling_price for dashboard display
+    totalStockValue: (state) => {
       return state.products.reduce((sum, p) => sum + ((p.selling_price || 0) * (p.quantity || 0)), 0);
     },
     availableProductsForPOS: (state) => {
-      // Sort by category then model for consistent display in POS
-      const sortByNameThenModel = (a,b) => {
+      const locationStore = useLocationStore();
+      const currentLocationId = locationStore.currentLocationId;
+
+      const sortByNameThenModel = (a, b) => {
         const catComp = (a.category || '').localeCompare(b.category || '');
         if (catComp !== 0) return catComp;
         return (a.model || '').localeCompare(b.model || '');
       };
 
-      if (!state.searchTerm) {
-        return state.products.filter(p => p.quantity > 0).sort(sortByNameThenModel);
+      // Filter products that have stock in the CURRENT location
+      const hasStockInCurrentLocation = (p) => {
+        const stock = p.stockByLocation?.[currentLocationId] || 0;
+        return stock > 0;
+      };
+
+      let filtered = state.products.filter(hasStockInCurrentLocation);
+
+      if (state.searchTerm) {
+        const lowerSearchTerm = state.searchTerm.toLowerCase();
+        filtered = filtered.filter(p =>
+          Object.values(p).some(value =>
+            String(value).toLowerCase().includes(lowerSearchTerm)
+          )
+        );
       }
-      const lowerSearchTerm = state.searchTerm.toLowerCase();
-      return state.products.filter(p =>
-        p.quantity > 0 &&
-        Object.values(p).some(value =>
-          String(value).toLowerCase().includes(lowerSearchTerm)
-        )
-      ).sort(sortByNameThenModel);
+      return filtered.sort(sortByNameThenModel);
+    },
+    // Helper to get stock for a specific location
+    getStockForLocation: (state) => (productId, locationId) => {
+      const product = state.products.find(p => p.idInternal === productId);
+      return product?.stockByLocation?.[locationId] || 0;
     },
     inventoryValuationByCost: (state) => {
-      return state.products.reduce((total, product) => total + ( (product.base_price || 0) * (product.quantity || 0) ), 0);
+      return state.products.reduce((total, product) => total + ((product.base_price || 0) * (product.quantity || 0)), 0);
     },
-    inventoryValuationBySalePrice: (state) => { // Same as totalStockValue, alias for clarity
-      return state.products.reduce((total, product) => total + ( (product.selling_price || 0) * (product.quantity || 0) ), 0);
+    inventoryValuationBySalePrice: (state) => {
+      return state.products.reduce((total, product) => total + ((product.selling_price || 0) * (product.quantity || 0)), 0);
     },
     productsWithIndividualValuation: (state) => {
       return state.products.map(p => ({
         ...p,
         valuationAtCost: (p.base_price || 0) * (p.quantity || 0),
         valuationAtSalePrice: (p.selling_price || 0) * (p.quantity || 0)
-      })).sort((a,b) => (a.category + a.model).localeCompare(b.category + b.model));
+      })).sort((a, b) => (a.category + a.model).localeCompare(b.category + b.model));
     },
     stockDistributionByCategory: (state) => (limit = 7) => {
       const categoryCounts = state.products.reduce((acc, product) => {
@@ -111,8 +145,8 @@ export const useProductStore = defineStore('products', {
         return acc;
       }, {});
       return Object.entries(categoryCounts)
-        .filter(([,qty]) => qty > 0)
-        .sort(([,a],[,b]) => b-a)
+        .filter(([, qty]) => qty > 0)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, limit);
     }
   },
@@ -123,9 +157,9 @@ export const useProductStore = defineStore('products', {
     async fetchProducts() {
       this.isLoading = true; this.error = null;
       try {
-        await new Promise(resolve => setTimeout(resolve, 100)); // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 100));
         const savedProducts = localStorage.getItem(LS_PRODUCTS_KEY);
-        this.products = savedProducts ? JSON.parse(savedProducts).map(p => createFullProductObject(p)) : []; // Ensure all fields
+        this.products = savedProducts ? JSON.parse(savedProducts).map(p => createFullProductObject(p)) : [];
 
         if (this.products.length === 0 && !localStorage.getItem(LS_SEEDED_PRODUCTS_KEY)) {
           this.seedInitialProducts();
@@ -135,8 +169,6 @@ export const useProductStore = defineStore('products', {
         this.error = 'Failed to load products. Data might be corrupted.';
         console.error("Error fetching/parsing products from localStorage:", e);
         this.products = [];
-        // Optionally clear corrupted localStorage data
-        // localStorage.removeItem(LS_PRODUCTS_KEY);
       } finally {
         this.isLoading = false;
       }
@@ -144,20 +176,35 @@ export const useProductStore = defineStore('products', {
     async addProduct(productData) {
       this.isLoading = true; this.error = null;
       const stockMovementStore = useStockMovementStore();
+      const locationStore = useLocationStore();
       try {
-        const newProduct = createFullProductObject(productData); // Uses helper for consistency
+        const newProduct = createFullProductObject(productData);
+
+        // If adding a product with initial quantity, assume it goes to the current location or default
+        // For new products, we might want to specify location. For now, let's assume Warehouse (id 2) or current.
+        // Let's default to Warehouse for new stock if not specified.
+        if (newProduct.quantity > 0 && Object.keys(newProduct.stockByLocation).length === 0) {
+          const defaultLoc = 2; // Warehouse
+          newProduct.stockByLocation = { [defaultLoc]: newProduct.quantity };
+        }
 
         this.products.unshift(newProduct);
 
         if (newProduct.quantity > 0) {
-          await stockMovementStore.addMovement({
-            productId: newProduct.idInternal,
-            productName: `${newProduct.company} ${newProduct.model}`,
-            type: 'initial_stock', // Or 'purchase_received' if it's from a PO
-            quantityChange: newProduct.quantity,
-            newQuantity: newProduct.quantity,
-            reason: 'Product Creation',
-          });
+          // Log movement for each location with stock
+          for (const [locId, qty] of Object.entries(newProduct.stockByLocation)) {
+            if (qty > 0) {
+              await stockMovementStore.addMovement({
+                productId: newProduct.idInternal,
+                productName: `${newProduct.company} ${newProduct.model}`,
+                type: 'initial_stock',
+                quantityChange: qty,
+                newQuantity: qty,
+                locationId: parseInt(locId),
+                reason: 'Product Creation',
+              });
+            }
+          }
         }
         this._saveProductsToLocalStorage();
         return newProduct;
@@ -176,25 +223,28 @@ export const useProductStore = defineStore('products', {
         const index = this.products.findIndex(p => p.idInternal === updatedProductData.idInternal);
         if (index !== -1) {
           const oldProduct = this.products[index];
-          const oldQuantity = oldProduct.quantity;
 
-          // Create the updated product, ensuring all fields are merged correctly
-          const newProductData = createFullProductObject({ ...oldProduct, ...updatedProductData });
-          newProductData.updatedAt = new Date().toISOString(); // Ensure updatedAt is fresh
+          // We don't usually update stock via updateProduct anymore, we use adjustStock.
+          // But if the user edits the "quantity" field directly in a form (if we allow that), we need to handle it.
+          // Ideally, we disable direct quantity editing in the product form and force using "Adjust Stock" or "Transfer".
+          // For now, let's assume the form might send updated fields but NOT stockByLocation changes directly unless we implement a complex UI.
+          // We will preserve the existing stockByLocation if not provided in updatedProductData.
+
+          const preservedStock = updatedProductData.stockByLocation || oldProduct.stockByLocation;
+          const newQuantity = calculateTotalStock(preservedStock);
+
+          const newProductData = createFullProductObject({
+            ...oldProduct,
+            ...updatedProductData,
+            stockByLocation: preservedStock,
+            quantity: newQuantity
+          });
+          newProductData.updatedAt = new Date().toISOString();
 
           this.products[index] = newProductData;
-          const newQuantity = newProductData.quantity;
+          // Note: We are NOT logging stock movements here because we assume stock didn't change via this generic update.
+          // If we want to allow stock editing here, we'd need to diff stockByLocation.
 
-          if (newQuantity !== oldQuantity) {
-            await stockMovementStore.addMovement({
-              productId: newProductData.idInternal,
-              productName: `${newProductData.company} ${newProductData.model}`,
-              type: 'manual_adjustment (form_edit)', // This specific type for form edits
-              quantityChange: newQuantity - oldQuantity,
-              newQuantity: newQuantity,
-              reason: 'Product details form update',
-            });
-          }
           this._saveProductsToLocalStorage();
           return this.products[index];
         } else {
@@ -215,15 +265,21 @@ export const useProductStore = defineStore('products', {
         const productIndex = this.products.findIndex(p => p.idInternal === productIdInternal);
         if (productIndex !== -1) {
           const productToDelete = this.products[productIndex];
-          if (productToDelete.quantity !== 0) { // Log if deleting a product that had stock
-            await stockMovementStore.addMovement({
-              productId: productToDelete.idInternal,
-              productName: `${productToDelete.company} ${productToDelete.model}`,
-              type: 'deletion',
-              quantityChange: -productToDelete.quantity, // Stock becomes 0
-              newQuantity: 0,
-              reason: 'Product deleted from system',
-            });
+          if (productToDelete.quantity !== 0) {
+            // Log deletion for all locations
+            for (const [locId, qty] of Object.entries(productToDelete.stockByLocation)) {
+              if (qty > 0) {
+                await stockMovementStore.addMovement({
+                  productId: productToDelete.idInternal,
+                  productName: `${productToDelete.company} ${productToDelete.model}`,
+                  type: 'deletion',
+                  quantityChange: -qty,
+                  newQuantity: 0,
+                  locationId: parseInt(locId),
+                  reason: 'Product deleted from system',
+                });
+              }
+            }
           }
         }
         this.products = this.products.filter(p => p.idInternal !== productIdInternal);
@@ -243,7 +299,7 @@ export const useProductStore = defineStore('products', {
       const seedData = [
         createFullProductObject({
           idInternal: "prod_vue_seed_001", no: "LT001", serial_number: "SN-INVTX1-001", category: "Laptop", company: "Innovatech", model: "Spectre X1", condition: "New",
-          cpu: "Intel Core i9", gen: "14th", screen_touch: true, ram: "32GB DDR5", quantity: 5,
+          cpu: "Intel Core i9", gen: "14th", screen_touch: true, ram: "32GB DDR5", quantity: 5, stockByLocation: { 3: 3, 4: 2 }, // Shop 1: 3, Shop 2: 2
           hdd: "N/A", ssd: "2TB NVMe Gen4", vga_type: "NVIDIA RTX 5060", vga_memory: "8GB GDDR6",
           base_price: 1800, selling_price: 2499.99, best_price: 2350,
           supplier: "TechDistributors Inc.", purchase_date: "2024-01-15", warranty: "2 years international",
@@ -254,7 +310,7 @@ export const useProductStore = defineStore('products', {
         }),
         createFullProductObject({
           idInternal: "prod_vue_seed_002", no: "PC002", serial_number: "SN-CYBRGT-001", category: "Desktop PC", company: "CyberBuild", model: "Gaming Rig Titan II", condition: "New",
-          cpu: "AMD Ryzen 9 7950X3D", gen: "Zen 4", screen_touch: false, ram: "64GB DDR5 6000MHz", quantity: 3,
+          cpu: "AMD Ryzen 9 7950X3D", gen: "Zen 4", screen_touch: false, ram: "64GB DDR5 6000MHz", quantity: 3, stockByLocation: { 2: 3 }, // Warehouse: 3
           hdd: "4TB SATA 7200RPM", ssd: "2TB Gen5 NVMe", vga_type: "AMD Radeon RX 8900XTX", vga_memory: "24GB GDDR7",
           base_price: 2200, selling_price: 3199.00, best_price: 3000,
           supplier: "PC Parts Global", purchase_date: "2024-02-10", warranty: "1 year components, 3 years service",
@@ -273,35 +329,52 @@ export const useProductStore = defineStore('products', {
           createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(), updatedAt: nowISO
         }),
       ];
-      this.products = []; // Clear before seeding
-      seedData.forEach(async (prodData) => { // Make sure addMovement can be awaited if it becomes async
-        this.products.push(prodData); // Add to local array first
-        if (prodData.quantity > 0) {
-          // Log movement directly since we are not using the full addProduct action here for seeding
-          await stockMovementStore.addMovement({
-            productId: prodData.idInternal,
-            productName: `${prodData.company} ${prodData.model}`,
-            type: 'initial_stock (seed)',
-            quantityChange: prodData.quantity,
-            newQuantity: prodData.quantity,
-            reason: 'Initial data seeding',
-          });
+      this.products = [];
+      seedData.forEach(async (prodData) => {
+        this.products.push(prodData);
+        for (const [locId, qty] of Object.entries(prodData.stockByLocation || {})) {
+          if (qty > 0) {
+            await stockMovementStore.addMovement({
+              productId: prodData.idInternal,
+              productName: `${prodData.company} ${prodData.model}`,
+              type: 'initial_stock (seed)',
+              quantityChange: qty,
+              newQuantity: qty,
+              locationId: parseInt(locId),
+              reason: 'Initial data seeding',
+            });
+          }
         }
       });
       this._saveProductsToLocalStorage();
-      console.log('Initial products seeded into productStore with stock movements (if any).');
+      console.log('Initial products seeded into productStore with stock movements.');
     },
-    async updateStockFromSale(itemsSold, saleId) {
+    async updateStockFromSale(itemsSold, saleId, locationId) {
       let productsChanged = false;
       const stockMovementStore = useStockMovementStore();
+
+      if (!locationId) {
+        console.error("No locationId provided for sale stock update!");
+        throw new Error("Location ID required for sale.");
+      }
+
       for (const soldItem of itemsSold) {
         const productIndex = this.products.findIndex(p => p.idInternal === soldItem.productIdInternal);
         if (productIndex !== -1) {
           const product = this.products[productIndex];
-          const oldQuantity = product.quantity;
-          const newQuantity = Math.max(0, oldQuantity - soldItem.quantitySold);
 
-          product.quantity = newQuantity;
+          const currentLocStock = product.stockByLocation[locationId] || 0;
+          if (currentLocStock < soldItem.quantitySold) {
+            console.warn(`Insufficient stock in location ${locationId} for product ${product.model}. Proceeding anyway (negative stock).`);
+          }
+
+          const newLocStock = Math.max(0, currentLocStock - soldItem.quantitySold);
+
+          // Update location stock
+          product.stockByLocation[locationId] = newLocStock;
+          // Update total quantity
+          product.quantity = calculateTotalStock(product.stockByLocation);
+
           product.updatedAt = new Date().toISOString();
           productsChanged = true;
 
@@ -310,7 +383,8 @@ export const useProductStore = defineStore('products', {
             productName: `${product.company} ${product.model}`,
             type: 'sale',
             quantityChange: -soldItem.quantitySold,
-            newQuantity: newQuantity,
+            newQuantity: newLocStock,
+            locationId: locationId,
             relatedDocumentId: saleId,
           });
         } else {
@@ -319,20 +393,28 @@ export const useProductStore = defineStore('products', {
       }
       if (productsChanged) { this._saveProductsToLocalStorage(); }
     },
-    async adjustStock({ productId, quantityChange, reason, type = 'manual_adjustment', relatedDocumentId = null }) {
+    async adjustStock({ productId, quantityChange, reason, type = 'manual_adjustment', relatedDocumentId = null, locationId }) {
       this.isLoading = true; this.error = null;
       const stockMovementStore = useStockMovementStore();
+
+      if (!locationId) {
+        this.isLoading = false;
+        throw new Error("Location ID is required for stock adjustment.");
+      }
+
       try {
         const productIndex = this.products.findIndex(p => p.idInternal === productId);
         if (productIndex === -1) { throw new Error("Product not found for stock adjustment."); }
 
         const product = this.products[productIndex];
-        const oldQuantity = product.quantity;
+        const currentLocStock = product.stockByLocation[locationId] || 0;
         const change = parseInt(quantityChange, 10);
         if (isNaN(change)) { throw new Error("Invalid quantity change. Must be a number."); }
 
-        const newQuantityCalculated = oldQuantity + change;
-        product.quantity = Math.max(0, newQuantityCalculated);
+        const newLocStock = Math.max(0, currentLocStock + change);
+
+        product.stockByLocation[locationId] = newLocStock;
+        product.quantity = calculateTotalStock(product.stockByLocation);
         product.updatedAt = new Date().toISOString();
 
         await stockMovementStore.addMovement({
@@ -340,7 +422,8 @@ export const useProductStore = defineStore('products', {
           productName: `${product.company} ${product.model}`,
           type: type,
           quantityChange: change,
-          newQuantity: product.quantity,
+          newQuantity: newLocStock,
+          locationId: locationId,
           reason: reason,
           relatedDocumentId: relatedDocumentId
         });
@@ -354,23 +437,56 @@ export const useProductStore = defineStore('products', {
         throw e;
       }
     },
+    async transferStock({ productId, fromLocationId, toLocationId, quantity, reason }) {
+      this.isLoading = true; this.error = null;
+      const stockMovementStore = useStockMovementStore();
+      try {
+        const productIndex = this.products.findIndex(p => p.idInternal === productId);
+        if (productIndex === -1) throw new Error("Product not found.");
+
+        const product = this.products[productIndex];
+        const fromStock = product.stockByLocation[fromLocationId] || 0;
+
+        if (fromStock < quantity) {
+          throw new Error(`Insufficient stock in source location.`);
+        }
+
+        // Deduct from source
+        product.stockByLocation[fromLocationId] = fromStock - quantity;
+        // Add to dest
+        product.stockByLocation[toLocationId] = (product.stockByLocation[toLocationId] || 0) + quantity;
+
+        // Total quantity remains same, but we update it just in case
+        product.quantity = calculateTotalStock(product.stockByLocation);
+        product.updatedAt = new Date().toISOString();
+
+        // Log movements
+        await stockMovementStore.addMovement({
+          productId, productName: `${product.company} ${product.model}`,
+          type: 'transfer_out', quantityChange: -quantity, newQuantity: product.stockByLocation[fromLocationId],
+          locationId: fromLocationId, reason: `Transfer to Loc ${toLocationId}: ${reason}`
+        });
+
+        await stockMovementStore.addMovement({
+          productId, productName: `${product.company} ${product.model}`,
+          type: 'transfer_in', quantityChange: quantity, newQuantity: product.stockByLocation[toLocationId],
+          locationId: toLocationId, reason: `Transfer from Loc ${fromLocationId}: ${reason}`
+        });
+
+        this._saveProductsToLocalStorage();
+        this.isLoading = false;
+      } catch (e) {
+        this.error = e.message;
+        this.isLoading = false;
+        throw e;
+      }
+    },
     clearAllProductsData(isImporting = false) {
       this.products = []; this.error = null; this.searchTerm = '';
       this._saveProductsToLocalStorage();
       if (!isImporting) { localStorage.removeItem(LS_SEEDED_PRODUCTS_KEY); }
-
-      if (!isImporting) {
-        const stockMovementStore = useStockMovementStore();
-        // Decide if stock movements should be cleared too. If they are product specific, yes.
-        // This might need a more nuanced approach, e.g., clear movements only for products being cleared.
-        // For a full system reset, stockMovementStore will have its own clearAll.
-        // For product import, we might keep historical movements if IDs can be re-linked, or clear them.
-        // For now, let's assume product import replaces products but might keep history if IDs match.
-        // For a full product data clear (not part of import), clearing movements for those products would make sense.
-        // The current stockMovementStore doesn't have a "clearByProductId"
-        console.warn('Clearing all products. Related stock movements are not automatically cleared by this action alone unless part of a system reset.');
-      }
       console.log('All products data cleared from productStore.');
     }
   },
 });
+

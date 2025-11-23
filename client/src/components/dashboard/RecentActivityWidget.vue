@@ -109,7 +109,7 @@ const recentActivities = computed(() => {
 .activity-icon-wrapper {
   flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  margin-right: var(--space-md); color: white;
+  margin-inline-end: var(--space-md); color: white;
 }
 .activity-icon-wrapper .activity-icon :deep(svg) { stroke: white; width: 20px; height: 20px; }
 .activity-content { flex-grow: 1; }

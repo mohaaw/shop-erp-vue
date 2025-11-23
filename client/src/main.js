@@ -9,10 +9,13 @@ import { useUserStore } from './stores/userStore';
 
 import './assets/main.css';
 
+import i18n from './i18n';
+
 const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia); // USE PINIA FIRST!
+app.use(i18n);
 
 const userStore = useUserStore();
 // Call checkAuthStatus and wait for it if it's async (it is now)
