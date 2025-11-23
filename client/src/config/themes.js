@@ -1,78 +1,79 @@
-// Premium themes with high readability
+// ERPNext-inspired professional theme system
+// Based on ERPNext v14+ "Timeless Day" and "Timeless Night" themes
 export const themePresets = {
-    dark: {
-        name: 'Dark',
-        description: 'Premium dark theme with gold accents',
-        colors: {
-            // Backgrounds - SOLID for readability
-            primary: '#D4AF37',        // Signature Gold
-            secondary: '#5B9FED',      // Blue accent
-            accent: '#4ECDC4',         // Teal
-            background: '#1E1E2F',     // Deep dark
-            backgroundOffset: '#27293D',
-            cardBackground: '#27293D', // SOLID, not transparent
-
-            // Text - HIGH CONTRAST
-            textMain: '#FFFFFF',
-            textMuted: '#9A9A9A',
-            textInverted: '#1E1E2F',
-
-            // UI Elements
-            borderColor: 'rgba(212, 175, 55, 0.3)',
-            navBg: '#1E1E2F',
-            navText: '#FFFFFF',
-
-            // Status colors
-            success: '#4ECDC4',
-            danger: '#FF5C93',
-            warning: '#FF9F43',
-            info: '#5B9FED'
-        }
-    },
-
     light: {
         name: 'Light',
-        description: 'Clean light theme with gold accents',
+        description: 'Clean professional light theme (ERPNext Timeless Day)',
         colors: {
-            // Backgrounds - SOLID
-            primary: '#D4AF37',        // Signature Gold
-            secondary: '#5E72E4',      // Blue
-            accent: '#FF6B2C',         // Orange
-            background: '#F4F5F7',
+            // Backgrounds
+            primary: '#2490EF',        // ERPNext blue
+            secondary: '#6C757D',      // Gray
+            accent: '#17A2B8',         // Teal
+            background: '#F7F7F7',     // Light gray background
             backgroundOffset: '#FFFFFF',
-            cardBackground: '#FFFFFF', // SOLID white cards
+            cardBackground: '#FFFFFF', // Solid white cards
 
-            // Text - HIGH CONTRAST
-            textMain: '#2D3748',
-            textMuted: '#718096',
+            // Text - High contrast
+            textMain: '#171717',       // Near black
+            textMuted: '#6C757D',      // Gray
             textInverted: '#FFFFFF',
 
             // UI Elements
-            borderColor: 'rgba(0, 0, 0, 0.1)',
+            borderColor: '#DDE2E5',
             navBg: '#FFFFFF',
-            navText: '#2D3748',
+            navText: '#171717',
 
             // Status colors
-            success: '#2DCE89',
-            danger: '#F5365C',
-            warning: '#FB6340',
-            info: '#5E72E4'
+            success: '#28A745',
+            danger: '#DC3545',
+            warning: '#FFC107',
+            info: '#2490EF'
+        }
+    },
+
+    dark: {
+        name: 'Dark',
+        description: 'Professional dark theme (ERPNext Timeless Night)',
+        colors: {
+            // Backgrounds
+            primary: '#3A8EF6',        // Lighter blue for dark bg
+            secondary: '#A8A8A8',      // Light gray
+            accent: '#4DD4E8',         // Bright teal
+            background: '#171717',     // Near black
+            backgroundOffset: '#1F1F1F',
+            cardBackground: '#25272E', // Dark gray cards
+
+            // Text - High contrast
+            textMain: '#F7F7F7',       // Off white
+            textMuted: '#A8A8A8',      // Light gray
+            textInverted: '#171717',
+
+            // UI Elements
+            borderColor: '#3A3A3A',
+            navBg: '#171717',
+            navText: '#F7F7F7',
+
+            // Status colors
+            success: '#48BB78',
+            danger: '#F56565',
+            warning: '#ECC94B',
+            info: '#3A8EF6'
         }
     },
 
     purple: {
         name: 'Purple',
-        description: 'Purple theme with gold accents',
+        description: 'Purple theme with gold accents (Custom)',
         colors: {
-            // Backgrounds - SOLID
+            // Backgrounds
             primary: '#BA54F5',        // Purple
             secondary: '#D4AF37',      // Gold accent
             accent: '#00E5C3',         // Cyan
             background: '#1E1E2F',
             backgroundOffset: '#27293D',
-            cardBackground: '#27293D', // SOLID
+            cardBackground: '#27293D', // Solid
 
-            // Text - HIGH CONTRAST
+            // Text - High contrast
             textMain: '#FFFFFF',
             textMuted: '#9A9A9A',
             textInverted: '#1E1E2F',
@@ -91,7 +92,7 @@ export const themePresets = {
     }
 };
 
-export const defaultTheme = 'dark';
+export const defaultTheme = 'light';
 
 // Color keys that can be customized
 export const customizableColors = [
