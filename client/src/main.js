@@ -8,6 +8,7 @@ import { useSettingsStore } from './stores/settingsStore';
 import { useUserStore } from './stores/userStore';
 
 import './assets/main.css';
+import './assets/glassmorphism.css';
 
 import i18n from './i18n';
 

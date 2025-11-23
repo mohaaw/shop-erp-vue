@@ -9,6 +9,7 @@ import { useSalesStore } from './salesStore';
 
 
 import i18n from '../i18n';
+import { themePresets, defaultTheme, applyThemeColors } from '../config/themes';
 
 const LS_PREFIX = 'shopErpVUE_';
 const DEFAULT_SETTINGS = {
@@ -17,9 +18,10 @@ const DEFAULT_SETTINGS = {
   storeEmail: "contact@techstorepromax.com",
   storePhone: "+1-555-TECH-PRO",
   currencySymbol: "$",
-  theme: "light",
+  theme: "dark",
   lowStockThreshold: 5,
   locale: "en",
+  customColors: null, // null means using preset colors
 };
 
 export const useSettingsStore = defineStore('settings', {
@@ -30,6 +32,7 @@ export const useSettingsStore = defineStore('settings', {
       ...(loadedSettings || {}),
       theme: (loadedSettings && loadedSettings.theme) ? loadedSettings.theme : DEFAULT_SETTINGS.theme,
       locale: (loadedSettings && loadedSettings.locale) ? loadedSettings.locale : DEFAULT_SETTINGS.locale,
+      customColors: (loadedSettings && loadedSettings.customColors) ? loadedSettings.customColors : null,
     };
   },
   actions: {
@@ -43,12 +46,16 @@ export const useSettingsStore = defineStore('settings', {
         theme: this.theme,
         lowStockThreshold: this.lowStockThreshold,
         locale: this.locale,
+        customColors: this.customColors,
       };
       localStorage.setItem(LS_PREFIX + 'appSettings', JSON.stringify(settingsToSave));
     },
     setTheme(newTheme) {
       this.theme = newTheme;
       document.documentElement.setAttribute('data-theme', this.theme);
+      // Apply theme colors dynamically
+      const colors = this.customColors || themePresets[this.theme]?.colors || themePresets[defaultTheme].colors;
+      applyThemeColors(colors);
       this.saveSettings();
     },
     setLocale(newLocale) {
@@ -59,11 +66,16 @@ export const useSettingsStore = defineStore('settings', {
       this.saveSettings();
     },
     toggleTheme() {
-      const newTheme = this.theme === 'light' ? 'dark' : 'light';
-      this.setTheme(newTheme);
+      const themes = ['dark', 'light', 'purple'];
+      const currentIndex = themes.indexOf(this.theme);
+      const nextIndex = (currentIndex + 1) % themes.length;
+      this.setTheme(themes[nextIndex]);
     },
     initializeTheme() {
       document.documentElement.setAttribute('data-theme', this.theme);
+      // Apply custom colors if set, otherwise use preset
+      const colors = this.customColors || themePresets[this.theme]?.colors || themePresets[defaultTheme].colors;
+      applyThemeColors(colors);
       // Initialize Locale as well
       i18n.global.locale.value = this.locale;
       document.documentElement.setAttribute('lang', this.locale);
@@ -92,6 +104,44 @@ export const useSettingsStore = defineStore('settings', {
         return true;
       }
       return false;
+    },
+
+    // --- Theme Customization Actions ---
+    setCustomColor(colorKey, colorValue) {
+      if (!this.customColors) {
+        // Initialize with current theme preset
+        this.customColors = { ...themePresets[this.theme].colors };
+      }
+      this.customColors[colorKey] = colorValue;
+      applyThemeColors(this.customColors);
+      this.saveSettings();
+    },
+
+    resetToPreset(themeName) {
+      this.customColors = null;
+      this.setTheme(themeName || this.theme);
+    },
+
+    exportTheme() {
+      return {
+        name: this.theme,
+        customColors: this.customColors,
+        timestamp: new Date().toISOString()
+      };
+    },
+
+    importTheme(themeData) {
+      if (themeData && themeData.customColors) {
+        this.customColors = themeData.customColors;
+        applyThemeColors(this.customColors);
+        this.saveSettings();
+        return true;
+      }
+      return false;
+    },
+
+    getCurrentColors() {
+      return this.customColors || themePresets[this.theme]?.colors || themePresets[defaultTheme].colors;
     },
 
     // --- Full Data Export/Import/Reset ---

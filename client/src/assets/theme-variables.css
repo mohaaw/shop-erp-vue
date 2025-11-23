@@ -1,0 +1,21 @@
+/* Theme System CSS Variables Mapping */
+/* This file maps dynamic theme variables to application CSS variables */
+
+:root {
+    /* Map theme variables to application variables */
+    --primary-color: var(--theme-primary, #D4AF37);
+    --secondary-color: var(--theme-secondary, #4A4A4A);
+    --bg-color: var(--theme-background, #FFFFFF);
+    --bg-color-offset: var(--theme-background-offset, #F5F5F5);
+    --card-bg-color: var(--theme-card-background, #FFFFFF);
+    --text-color: var(--theme-text-main, #121212);
+    --text-color-muted: var(--theme-text-muted, #555555);
+    --text-color-inverted: var(--theme-text-inverted, #FFFFFF);
+    --border-color: var(--theme-border-color, #DCDCDC);
+    --nav-bg-color: var(--theme-nav-bg, #1C1C1C);
+    --nav-text-color: var(--theme-nav-text, #E0E0E0);
+    --success-color: var(--theme-success, #2E8B57);
+    --danger-color: var(--theme-danger, #B22222);
+    --warning-color: var(--theme-warning, #DAA520);
+    --info-color: var(--theme-info, #4682B4);
+}
