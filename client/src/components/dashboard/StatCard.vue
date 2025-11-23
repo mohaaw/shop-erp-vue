@@ -44,9 +44,7 @@ const props = defineProps({
 });
 
 const cardStyle = computed(() => {
-  if (props.color && !props.iconBgColor) {
-    return { borderLeft: `4px solid ${props.color}` };
-  }
+  // Removed border-left logic as it conflicts with glassmorphism
   return {};
 });
 
@@ -59,85 +57,87 @@ const changeTypeClass = computed(() => {
 
 <style scoped>
 .stat-card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  position: relative;
+  overflow: hidden;
 }
-.stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--box-shadow-strong);
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+  opacity: 0.5;
 }
+
 .stat-card .card-body {
   display: flex;
-  align-items: flex-start;
-  padding: 1rem 1.2rem;
-  min-height: 120px;
-  gap: 0.8rem;
-}
-.stat-icon-wrapper {
-  font-size: 1.5rem;
-  padding: 0.8rem;
-  border-radius: 50%;
-  color: white;
-  margin-inline-end: 1.2rem;
-  width: 56px;
-  height: 56px;
-  display: flex;
   align-items: center;
-  justify-content: center;
+  padding: 1.5rem;
+  gap: 1.2rem;
+}
+
+.stat-icon-wrapper {
+  width: 64px; height: 64px;
+  border-radius: 1rem;
+  display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 8px 16px -4px rgba(0,0,0,0.1);
+  background: linear-gradient(135deg, var(--primary-color), #d97706); /* Default fallback */
 }
+
 .stat-icon :deep(svg) {
-  width: 28px;
-  height: 28px;
-  stroke: white;
-}
-.stat-icon { /* For emoji icons if passed as simple string to v-html */
-  line-height: 1;
+  width: 32px; height: 32px;
+  stroke: white; stroke-width: 2px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
 }
 
 .stat-content {
-  flex-grow: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
+  flex-grow: 1; min-width: 0;
+  display: flex; flex-direction: column;
 }
+
 .stat-title {
-  font-size: 0.9rem;
-  color: var(--text-color-muted);
-  margin-bottom: var(--space-xs);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.25rem;
   text-transform: uppercase;
   font-weight: 600;
+  letter-spacing: 0.05em;
 }
+
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: var(--text-color);
-  margin-bottom: var(--space-xs);
-  line-height: 1.2;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  max-width: 100%;
+  color: var(--text-main);
+  margin-bottom: 0.25rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
+
 .stat-change {
   font-size: 0.85rem;
-  margin-bottom: 0;
+  font-weight: 500;
+  display: flex; align-items: center; gap: 0.25rem;
 }
-.text-success { color: var(--success-color) !important; }
-.text-danger { color: var(--danger-color) !important; }
-.text-muted { color: var(--text-tertiary) !important; }
+
+.text-success { color: hsl(var(--success-h), var(--success-s), 40%) !important; }
+.text-danger { color: hsl(var(--danger-h), var(--danger-s), 50%) !important; }
+[data-theme="dark"] .text-success { color: hsl(var(--success-h), var(--success-s), 60%) !important; }
+[data-theme="dark"] .text-danger { color: hsl(var(--danger-h), var(--danger-s), 70%) !important; }
 
 .card-footer {
-  background-color: var(--bg-tertiary);
-  padding: var(--space-sm) var(--space-md);
+  background: rgba(0,0,0,0.02);
+  padding: 0.75rem 1.5rem;
   border-top: 1px solid var(--border-color);
+  margin-top: 0;
 }
+
 .footer-link {
   font-size: 0.85rem;
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-weight: 500;
+  color: var(--primary-color);
+  font-weight: 600;
+  transition: all 0.2s;
 }
 .footer-link:hover {
-  color: var(--accent-color);
-  text-decoration: underline;
+  letter-spacing: 0.02em;
 }
 </style>

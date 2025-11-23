@@ -18,38 +18,38 @@
 
         <!-- Contact Person -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('suppliers.contact_person') }}</label>
           <input v-model="form.contactPerson" type="text" class="form-control w-full" placeholder="e.g. John Doe" />
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Email -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('suppliers.email') }}</label>
             <input v-model="form.email" type="email" class="form-control w-full" placeholder="contact@acme.com" />
           </div>
 
           <!-- Phone -->
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('suppliers.phone') }}</label>
             <input v-model="form.phone" type="tel" class="form-control w-full" placeholder="+1 234 567 890" />
           </div>
         </div>
 
         <!-- Address -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Address</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('suppliers.address') }}</label>
           <textarea v-model="form.address" rows="3" class="form-control w-full" placeholder="123 Business St..."></textarea>
         </div>
 
         <!-- Notes -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <label class="block text-sm font-medium text-gray-700 mb-1">{{ $t('suppliers.notes') }}</label>
           <textarea v-model="form.notes" rows="2" class="form-control w-full" placeholder="Additional details..."></textarea>
         </div>
 
         <div class="flex justify-end gap-3 pt-4 border-t mt-6">
-          <button type="button" @click="$router.back()" class="btn btn-light">Cancel</button>
+          <button type="button" @click="$router.back()" class="btn btn-light">{{ $t('common.cancel') }}</button>
           <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
             {{ isSubmitting ? 'Saving...' : (isEditing ? 'Update Supplier' : 'Save Supplier') }}
           </button>

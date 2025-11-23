@@ -75,7 +75,7 @@
             </div>
 
             <div class="form-group">
-              <label for="settings-store-address" class="form-label">Store Address</label>
+              <label for="settings-store-address" class="form-label">{{ $t('settings.store_address') }}</label>
               <textarea 
                 id="settings-store-address" 
                 v-model="editableSettings.storeAddress" 
@@ -83,12 +83,12 @@
                 rows="3"
                 placeholder="Enter complete store address"
               ></textarea>
-              <small class="form-text">Displayed on invoices and official documents</small>
+              <small class="form-text">{{ $t('settings.store_address_hint') }}</small>
             </div>
 
             <div class="form-grid-2">
               <div class="form-group">
-                <label for="settings-store-email" class="form-label">Contact Email</label>
+                <label for="settings-store-email" class="form-label">{{ $t('settings.contact_email') }}</label>
                 <input 
                   type="email" 
                   id="settings-store-email" 
@@ -97,11 +97,11 @@
                   @blur="validateEmail"
                   placeholder="contact@store.com"
                 >
-                <small class="form-text">For customer inquiries</small>
+                <small class="form-text">{{ $t('settings.contact_email_hint') }}</small>
               </div>
 
               <div class="form-group">
-                <label for="settings-store-phone" class="form-label">Contact Phone</label>
+                <label for="settings-store-phone" class="form-label">{{ $t('settings.contact_phone') }}</label>
                 <input 
                   type="tel" 
                   id="settings-store-phone" 
@@ -109,7 +109,7 @@
                   class="form-control"
                   placeholder="+1 (555) 123-4567"
                 >
-                <small class="form-text">For customer support</small>
+                <small class="form-text">{{ $t('settings.contact_phone_hint') }}</small>
               </div>
             </div>
 
@@ -140,7 +140,7 @@
                   >
                   <span class="currency-preview">{{ editableSettings.currencySymbol }}100.00</span>
                 </div>
-                <small class="form-text">Used in all financial displays</small>
+                <small class="form-text">{{ $t('settings.currency_hint') }}</small>
               </div>
 
               <div class="form-group">
@@ -154,7 +154,7 @@
                   max="999"
                   placeholder="5"
                 >
-                <small class="form-text">Items at or below this count will trigger warnings</small>
+                <small class="form-text">{{ $t('settings.low_stock_hint') }}</small>
               </div>
             </div>
 
@@ -182,8 +182,8 @@
             <div class="data-action">
               <div class="action-icon success">📥</div>
               <div class="action-content">
-                <h4>Export Products</h4>
-                <p>Download all products as Excel file</p>
+                <h4>{{ $t('settings.export_products') }}</h4>
+                <p>{{ $t('settings.export_products_desc') }}</p>
               </div>
               <button 
                 class="btn btn-success" 
@@ -200,8 +200,8 @@
             <div class="data-action">
               <div class="action-icon info">📤</div>
               <div class="action-content">
-                <h4>Import Products</h4>
-                <p>Upload Excel file to replace products</p>
+                <h4>{{ $t('settings.import_products') }}</h4>
+                <p>{{ $t('settings.import_products_desc') }}</p>
               </div>
               <label class="btn btn-info" :class="{ 'is-loading': importingExcel }">
                 <span v-if="importingExcel" class="btn-loading">
@@ -235,8 +235,8 @@
             <div class="data-action">
               <div class="action-icon warning">⬇️</div>
               <div class="action-content">
-                <h4>Export All Data</h4>
-                <p>Complete backup of all application data</p>
+                <h4>{{ $t('settings.export_all') }}</h4>
+                <p>{{ $t('settings.export_all_desc') }}</p>
               </div>
               <button 
                 class="btn btn-warning" 
@@ -253,8 +253,8 @@
             <div class="data-action">
               <div class="action-icon info">⬆️</div>
               <div class="action-content">
-                <h4>Restore from Backup</h4>
-                <p>Restore data from previously saved JSON file</p>
+                <h4>{{ $t('settings.restore_backup') }}</h4>
+                <p>{{ $t('settings.restore_backup_desc') }}</p>
               </div>
               <label class="btn btn-primary" :class="{ 'is-loading': importingJson }">
                 <span v-if="importingJson" class="btn-loading">
@@ -292,31 +292,31 @@
     <div v-show="activeTab === 'system'" class="settings-section">
       <!-- System Information -->
       <div class="card">
-        <div class="card-header">ℹ️ System Information</div>
+        <div class="card-header">ℹ️ {{ $t('settings.system_info') }}</div>
         <div class="card-body">
           <div class="info-grid">
             <div class="info-card">
-              <span class="info-label">Application Version</span>
+              <span class="info-label">{{ $t('settings.app_version') }}</span>
               <span class="info-value">{{ appVersion }}</span>
             </div>
             <div class="info-card">
-              <span class="info-label">Current Theme</span>
+              <span class="info-label">{{ $t('settings.current_theme') }}</span>
               <span class="info-value">{{ settingsStore.theme === 'dark' ? '🌙 Dark' : '☀️ Light' }}</span>
             </div>
             <div class="info-card">
-              <span class="info-label">Products Loaded</span>
+              <span class="info-label">{{ $t('settings.products_loaded') }}</span>
               <span class="info-value">{{ productStore.products.length }}</span>
             </div>
             <div class="info-card">
-              <span class="info-label">Sales Records</span>
+              <span class="info-label">{{ $t('settings.sales_records') }}</span>
               <span class="info-value">{{ salesStore.sales.length }}</span>
             </div>
             <div class="info-card">
-              <span class="info-label">Customers</span>
+              <span class="info-label">{{ $t('settings.customers_count') }}</span>
               <span class="info-value">{{ customerStore.customers.length }}</span>
             </div>
             <div class="info-card">
-              <span class="info-label">Storage Used</span>
+              <span class="info-label">{{ $t('settings.storage_used') }}</span>
               <span class="info-value">{{ storageUsed }}</span>
             </div>
           </div>
@@ -343,11 +343,11 @@
           <div class="danger-info">
             <p>This action will:</p>
             <ul>
-              <li>Delete all products and inventory</li>
-              <li>Delete all sales records and transactions</li>
-              <li>Delete all customer information</li>
-              <li>Reset application settings to defaults</li>
-              <li>Clear all application cache</li>
+              <li>{{ $t('settings.delete_products') }}</li>
+              <li>{{ $t('settings.delete_sales') }}</li>
+              <li>{{ $t('settings.delete_customers') }}</li>
+              <li>{{ $t('settings.reset_settings') }}</li>
+              <li>{{ $t('settings.clear_cache') }}</li>
             </ul>
           </div>
         </div>

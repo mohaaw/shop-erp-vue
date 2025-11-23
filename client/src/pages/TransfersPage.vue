@@ -3,12 +3,12 @@
     <h1 class="page-title">🚚 Stock Transfers</h1>
 
     <div class="card">
-      <div class="card-header">New Transfer</div>
+      <div class="card-header">{{ $t('transfers.title') }}</div>
       <div class="card-body">
         <form @submit.prevent="submitTransfer">
           <div class="form-grid-2">
             <div class="form-group">
-              <label>Source Location</label>
+              <label>{{ $t('transfers.source') }}</label>
               <select v-model="form.fromLocationId" class="form-control" required>
                 <option v-for="loc in locationStore.locations" :key="loc.id" :value="loc.id">
                   {{ loc.name }}
@@ -16,7 +16,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Destination Location</label>
+              <label>{{ $t('transfers.destination') }}</label>
               <select v-model="form.toLocationId" class="form-control" required>
                 <option v-for="loc in locationStore.locations" :key="loc.id" :value="loc.id" :disabled="loc.id === form.fromLocationId">
                   {{ loc.name }}
@@ -26,9 +26,9 @@
           </div>
 
           <div class="form-group">
-            <label>Product</label>
+            <label>{{ $t('transfers.product') }}</label>
             <select v-model="form.productId" class="form-control" required @change="updateMaxQuantity">
-              <option value="" disabled>Select Product</option>
+              <option value="" disabled>{{ $t('transfers.select_product') }}</option>
               <option v-for="product in productStore.products" :key="product.idInternal" :value="product.idInternal">
                 {{ product.company }} {{ product.model }} (Available: {{ getAvailableStock(product) }})
               </option>
@@ -37,7 +37,7 @@
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label>Quantity</label>
+              <label>{{ $t('transfers.quantity') }}</label>
               <input v-model.number="form.quantity" type="number" min="1" :max="maxQuantity" class="form-control" required />
               <small class="text-muted">Max available: {{ maxQuantity }}</small>
             </div>

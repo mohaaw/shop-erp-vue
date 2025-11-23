@@ -1,10 +1,14 @@
 <template>
   <div class="dashboard-page">
-    <div class="flex justify-between items-center mb-6">
-      <h1 class="page-title mb-0">📊 {{ settingsStore.storeName }} Dashboard</h1>
-      <div class="flex gap-2">
-        <button @click="toggleEditMode" class="btn btn-secondary btn-sm">
-          {{ editMode ? 'Done Editing' : 'Edit Dashboard' }}
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      <div>
+        <h1 class="page-title mb-1">📊 {{ settingsStore.storeName }} Dashboard</h1>
+        <p class="text-muted text-sm">Overview of your store's performance</p>
+      </div>
+      <div class="flex gap-3">
+        <button @click="toggleEditMode" class="btn btn-secondary btn-sm glass-btn">
+          <span v-if="!editMode">✏️ Edit Layout</span>
+          <span v-else>✅ Done Editing</span>
         </button>
       </div>
     </div>
@@ -227,10 +231,11 @@ const aovTrend = computed(() => 0); // Placeholder as logic was missing in origi
 </script>
 
 <style scoped>
-.dashboard-page .page-title {
-  font-family: var(--font-family-sans);
-  font-size: 1.75rem;
-  border-bottom-width: 2px;
-  /* margin-bottom: var(--space-lg); Removed to fit header layout */
+.glass-btn {
+  backdrop-filter: blur(4px);
+  background: rgba(255,255,255,0.5);
+}
+[data-theme="dark"] .glass-btn {
+  background: rgba(255,255,255,0.1);
 }
 </style>
