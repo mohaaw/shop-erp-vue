@@ -1,1153 +1,457 @@
 <template>
   <div class="settings-page">
-    <div class="settings-header">
-      <h1 class="page-title">⚙️ Settings & Configuration</h1>
-      <p class="page-subtitle">Manage your store, preferences, and application data</p>
+    <div class="page-header mb-6">
+      <h1 class="page-title text-2xl font-bold text-gray-800">⚙️ Settings</h1>
+      <p class="text-gray-500">Manage global configuration and preferences</p>
     </div>
 
-    <!-- Settings Navigation Tabs -->
-    <div class="settings-tabs">
-      <button 
-        v-for="tab in tabs" 
-        :key="tab.id"
-        :class="['tab-button', { active: activeTab === tab.id }]"
-        @click="activeTab = tab.id"
-      >
-        <span class="tab-icon">{{ tab.icon }}</span>
-        <span class="tab-label">{{ tab.label }}</span>
-      </button>
-    </div>
+    <div class="settings-layout flex flex-col md:flex-row gap-6">
+      <!-- Sidebar Navigation -->
+      <div class="settings-sidebar w-full md:w-64 flex-shrink-0">
+        <div class="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-4">
+          <button 
+            v-for="tab in tabs" 
+            :key="tab.id"
+            @click="activeTab = tab.id"
+            class="w-full text-left px-4 py-3 text-sm font-medium border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors flex items-center gap-3"
+            :class="{'bg-blue-50 text-blue-600 border-l-4 border-l-blue-500': activeTab === tab.id, 'text-gray-700 border-l-4 border-l-transparent': activeTab !== tab.id}"
+          >
+            <span class="text-lg">{{ tab.icon }}</span>
+            {{ tab.label }}
+          </button>
+        </div>
+      </div>
 
-    <!-- GENERAL SETTINGS TAB -->
-    <div v-show="activeTab === 'general'" class="settings-section">
-      <!-- Appearance Settings -->
-      <div class="card">
-        <div class="card-header">🎨 {{ $t('settings.appearance') }}</div>
-        <div class="card-body">
-          <div class="settings-row">
-            <div class="settings-left">
-              <h4 class="setting-title">{{ $t('settings.theme_light') }} / {{ $t('settings.theme_dark') }}</h4>
-              <p class="setting-description">Choose between light and dark mode.</p>
-            </div>
-            <div class="settings-right">
-              <ThemeSwitcher class="theme-switcher-inline" />
-            </div>
-          </div>
+      <!-- Content Area -->
+      <div class="settings-content flex-1">
+        <form @submit.prevent="saveSettings" class="space-y-6">
           
-          <hr class="my-4 border-gray-200 dark:border-gray-700">
-
-          <div class="settings-row">
-            <div class="settings-left">
-              <h4 class="setting-title">{{ $t('settings.language') }}</h4>
-              <p class="setting-description">Select your preferred language.</p>
+          <!-- COMPANY SETTINGS -->
+          <div v-if="activeTab === 'company'" class="card">
+            <div class="card-header">
+              <h3 class="card-title">Company Profile</h3>
             </div>
-            <div class="settings-right">
-              <select 
-                v-model="settingsStore.locale" 
-                @change="settingsStore.setLocale($event.target.value)"
-                class="form-control w-auto"
-              >
-                <option value="en">🇺🇸 English</option>
-                <option value="ar">🇸🇦 العربية</option>
-              </select>
+            <div class="card-body form-grid">
+              <div class="form-group">
+                <label class="form-label required">Company Name</label>
+                <input type="text" v-model="settings.storeName" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Abbreviation</label>
+                <input type="text" v-model="settings.company.abbreviation" class="form-input" placeholder="e.g. TSP">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Country</label>
+                <input type="text" v-model="settings.company.country" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Default Currency</label>
+                <input type="text" v-model="settings.company.currency" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Timezone</label>
+                <input type="text" v-model="settings.company.timezone" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Fiscal Year Start</label>
+                <input type="text" v-model="settings.company.fiscalYearStart" class="form-input" placeholder="MM-DD">
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Store Information -->
-      <div class="card">
-        <div class="card-header">🏪 Store Information</div>
-        <div class="card-body">
-          <form @submit.prevent="handleStoreInfoUpdate">
-            <div class="form-group">
-              <label for="settings-store-name" class="form-label">Store Name *</label>
-              <input 
-                type="text" 
-                id="settings-store-name" 
-                v-model="editableSettings.storeName" 
-                class="form-control"
-                @blur="validateStoreInfo"
-                maxlength="100"
-                placeholder="Enter your store name"
-              >
-              <small class="form-text">Used in reports, exports, and receipts</small>
-            </div>
-
-            <div class="form-group">
-              <label for="settings-store-address" class="form-label">{{ $t('settings.store_address') }}</label>
-              <textarea 
-                id="settings-store-address" 
-                v-model="editableSettings.storeAddress" 
-                class="form-control" 
-                rows="3"
-                placeholder="Enter complete store address"
-              ></textarea>
-              <small class="form-text">{{ $t('settings.store_address_hint') }}</small>
-            </div>
-
-            <div class="form-grid-2">
+          <!-- LOCALIZATION -->
+          <div v-if="activeTab === 'localization'" class="card">
+            <div class="card-header"><h3 class="card-title">Localization</h3></div>
+            <div class="card-body form-grid">
               <div class="form-group">
-                <label for="settings-store-email" class="form-label">{{ $t('settings.contact_email') }}</label>
-                <input 
-                  type="email" 
-                  id="settings-store-email" 
-                  v-model="editableSettings.storeEmail" 
-                  class="form-control"
-                  @blur="validateEmail"
-                  placeholder="contact@store.com"
-                >
-                <small class="form-text">{{ $t('settings.contact_email_hint') }}</small>
+                <label class="form-label">Date Format</label>
+                <select v-model="settings.formats.date" class="form-select">
+                  <option value="YYYY-MM-DD">YYYY-MM-DD (ISO)</option>
+                  <option value="DD-MM-YYYY">DD-MM-YYYY (Euro)</option>
+                  <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
+                </select>
               </div>
-
               <div class="form-group">
-                <label for="settings-store-phone" class="form-label">{{ $t('settings.contact_phone') }}</label>
-                <input 
-                  type="tel" 
-                  id="settings-store-phone" 
-                  v-model="editableSettings.storePhone" 
-                  class="form-control"
-                  placeholder="+1 (555) 123-4567"
-                >
-                <small class="form-text">{{ $t('settings.contact_phone_hint') }}</small>
+                <label class="form-label">Time Format</label>
+                <select v-model="settings.formats.time" class="form-select">
+                  <option value="24h">24 Hour</option>
+                  <option value="12h">12 Hour (AM/PM)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Language</label>
+                <select v-model="settings.locale" class="form-select">
+                  <option value="en">English</option>
+                  <option value="ar">Arabic</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Currency Symbol</label>
+                <input type="text" v-model="settings.currencySymbol" class="form-input">
               </div>
             </div>
+          </div>
 
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary">💾 Save Store Information</button>
-              <button type="button" @click="resetStoreInfo" class="btn btn-secondary">↶ Reset</button>
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <!-- Preferences -->
-      <div class="card">
-        <div class="card-header">⚙️ Business Preferences</div>
-        <div class="card-body">
-          <form @submit.prevent="handlePreferencesUpdate">
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label for="currency-symbol-setting" class="form-label">Currency Symbol *</label>
-                <div class="input-with-preview">
-                  <input 
-                    type="text" 
-                    id="currency-symbol-setting" 
-                    v-model="editableSettings.currencySymbol" 
-                    class="form-control"
-                    maxlength="3"
-                    placeholder="$"
-                  >
-                  <span class="currency-preview">{{ editableSettings.currencySymbol }}100.00</span>
+          <!-- NUMBER SERIES -->
+          <div v-if="activeTab === 'naming'" class="card">
+            <div class="card-header"><h3 class="card-title">Document Naming</h3></div>
+            <div class="card-body">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 bg-gray-50 rounded border border-gray-200">
+                  <h4 class="font-semibold mb-3">Sales Invoice</h4>
+                  <div class="form-group mb-2">
+                    <label class="form-label">Prefix</label>
+                    <input type="text" v-model="settings.numberSeries.sales.prefix" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Padding</label>
+                    <input type="number" v-model.number="settings.numberSeries.sales.padding" class="form-input">
+                  </div>
+                  <div class="text-xs text-gray-500 mt-2">Example: {{ settings.numberSeries.sales.prefix }}00001</div>
                 </div>
-                <small class="form-text">{{ $t('settings.currency_hint') }}</small>
-              </div>
 
+                <div class="p-4 bg-gray-50 rounded border border-gray-200">
+                  <h4 class="font-semibold mb-3">Purchase Order</h4>
+                  <div class="form-group mb-2">
+                    <label class="form-label">Prefix</label>
+                    <input type="text" v-model="settings.numberSeries.purchase.prefix" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Padding</label>
+                    <input type="number" v-model.number="settings.numberSeries.purchase.padding" class="form-input">
+                  </div>
+                </div>
+
+                <div class="p-4 bg-gray-50 rounded border border-gray-200">
+                  <h4 class="font-semibold mb-3">Quotation</h4>
+                  <div class="form-group mb-2">
+                    <label class="form-label">Prefix</label>
+                    <input type="text" v-model="settings.numberSeries.quotation.prefix" class="form-input">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Padding</label>
+                    <input type="number" v-model.number="settings.numberSeries.quotation.padding" class="form-input">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- DEFAULTS -->
+          <div v-if="activeTab === 'defaults'" class="card">
+            <div class="card-header"><h3 class="card-title">Global Defaults</h3></div>
+            <div class="card-body form-grid">
               <div class="form-group">
-                <label for="low-stock-setting" class="form-label">Low Stock Alert Level (units) *</label>
-                <input 
-                  type="number" 
-                  id="low-stock-setting" 
-                  v-model.number="editableSettings.lowStockThreshold" 
-                  class="form-control"
-                  min="0"
-                  max="999"
-                  placeholder="5"
-                >
-                <small class="form-text">{{ $t('settings.low_stock_hint') }}</small>
+                <label class="form-label">Default Warehouse</label>
+                <input type="text" v-model="settings.defaults.warehouse" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Default Payment Terms</label>
+                <select v-model="settings.defaults.paymentTerms" class="form-select">
+                  <option value="Immediate">Immediate</option>
+                  <option value="Net 15">Net 15</option>
+                  <option value="Net 30">Net 30</option>
+                  <option value="Net 60">Net 60</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Default UOM</label>
+                <input type="text" v-model="settings.defaults.uom" class="form-input">
+              </div>
+            </div>
+          </div>
+
+          <!-- STOCK -->
+          <div v-if="activeTab === 'stock'" class="card">
+            <div class="card-header"><h3 class="card-title">Stock Settings</h3></div>
+            <div class="card-body form-grid">
+              <div class="form-group">
+                <label class="form-label">Valuation Method</label>
+                <select v-model="settings.stock.valuationMethod" class="form-select">
+                  <option value="FIFO">FIFO (First In First Out)</option>
+                  <option value="LIFO">LIFO (Last In First Out)</option>
+                  <option value="Moving Average">Moving Average</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Low Stock Threshold</label>
+                <input type="number" v-model.number="settings.lowStockThreshold" class="form-input">
+              </div>
+              <div class="form-group flex items-center pt-6">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" v-model="settings.stock.allowNegativeStock" class="form-checkbox">
+                  <span class="text-sm font-medium text-gray-700">Allow Negative Stock</span>
+                </label>
+              </div>
+              <div class="form-group flex items-center pt-6">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" v-model="settings.stock.autoReserve" class="form-checkbox">
+                  <span class="text-sm font-medium text-gray-700">Auto Reserve Stock on Order</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAX -->
+          <div v-if="activeTab === 'tax'" class="card">
+            <div class="card-header"><h3 class="card-title">Tax Configuration</h3></div>
+            <div class="card-body form-grid">
+              <div class="form-group">
+                <label class="form-label">Default Tax Name</label>
+                <input type="text" v-model="settings.tax.name" class="form-input" placeholder="e.g. VAT">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Default Tax Rate (%)</label>
+                <input type="number" v-model.number="settings.tax.rate" class="form-input" step="0.01">
+              </div>
+              <div class="form-group flex items-center pt-6">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" v-model="settings.tax.inclusive" class="form-checkbox">
+                  <span class="text-sm font-medium text-gray-700">Tax Included in Price</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- SYSTEM -->
+          <div v-if="activeTab === 'system'" class="space-y-6">
+            <!-- Theme -->
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Appearance</h3></div>
+              <div class="card-body">
+                <div class="grid grid-cols-2 gap-4">
+                  <div 
+                    class="border rounded-lg p-4 cursor-pointer transition-all"
+                    :class="settings.theme === 'light' ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'"
+                    @click="settings.theme = 'light'; settingsStore.setTheme('light')"
+                  >
+                    <div class="font-semibold mb-1">☀️ Frappe Flat</div>
+                    <div class="text-xs text-gray-500">Clean, light ERPNext standard</div>
+                  </div>
+                  <div 
+                    class="border rounded-lg p-4 cursor-pointer transition-all"
+                    :class="settings.theme === 'dark' ? 'border-blue-500 bg-gray-800 text-white ring-2 ring-blue-200' : 'border-gray-200 hover:border-gray-300'"
+                    @click="settings.theme = 'dark'; settingsStore.setTheme('dark')"
+                  >
+                    <div class="font-semibold mb-1">🌑 Frappe Dark</div>
+                    <div class="text-xs opacity-75">Professional dark mode</div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary">💾 Save Preferences</button>
-              <button type="button" @click="resetPreferences" class="btn btn-secondary">↶ Reset</button>
+            <!-- Data Management -->
+            <div class="card">
+              <div class="card-header"><h3 class="card-title">Data Management</h3></div>
+              <div class="card-body space-y-4">
+                <div class="flex justify-between items-center p-4 bg-gray-50 rounded border border-gray-200">
+                  <div>
+                    <h4 class="font-medium">Export Products</h4>
+                    <p class="text-xs text-gray-500">Download all products as Excel</p>
+                  </div>
+                  <button type="button" @click="handleExportProductsExcel" class="btn btn-secondary btn-sm">Download .xlsx</button>
+                </div>
+                <div class="flex justify-between items-center p-4 bg-gray-50 rounded border border-gray-200">
+                  <div>
+                    <h4 class="font-medium">Full Backup</h4>
+                    <p class="text-xs text-gray-500">Export entire database as JSON</p>
+                  </div>
+                  <button type="button" @click="handleExportAllDataJSON" class="btn btn-secondary btn-sm">Backup .json</button>
+                </div>
+              </div>
             </div>
-          </form>
-        </div>
+
+            <!-- Danger Zone -->
+            <div class="card border-red-200">
+              <div class="card-header bg-red-50 border-b border-red-100">
+                <h3 class="card-title text-red-700">Danger Zone</h3>
+              </div>
+              <div class="card-body">
+                <p class="text-sm text-gray-600 mb-4">Irreversible actions. Proceed with caution.</p>
+                <button type="button" @click="handleSystemReset" class="btn btn-danger w-full">
+                  🗑️ Factory Reset System
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Bar -->
+          <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 flex justify-end gap-3 z-50 md:pl-64">
+            <button type="button" @click="loadSettings" class="btn btn-secondary">Discard Changes</button>
+            <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+          </div>
+
+        </form>
       </div>
     </div>
-
-    <!-- DATA MANAGEMENT TAB -->
-    <div v-show="activeTab === 'data'" class="settings-section">
-      <!-- Product Data Export/Import -->
-      <div class="card">
-        <div class="card-header">📊 Product Data Management</div>
-        <div class="card-body">
-          <p class="card-description">
-            Export your products to Excel for backup or external analysis. Import products from Excel to update inventory.
-            <strong>Note:</strong> Importing will replace all current products.
-          </p>
-
-          <div class="data-action-group">
-            <div class="data-action">
-              <div class="action-icon success">📥</div>
-              <div class="action-content">
-                <h4>{{ $t('settings.export_products') }}</h4>
-                <p>{{ $t('settings.export_products_desc') }}</p>
-              </div>
-              <button 
-                class="btn btn-success" 
-                @click="handleExportProductsExcel" 
-                :disabled="productStore.isLoading || productStore.products.length === 0 || exportingExcel"
-              >
-                <span v-if="exportingExcel" class="btn-loading">
-                  <span class="loader-inline"></span> Exporting...
-                </span>
-                <span v-else>📊 Export ({{ productStore.products.length }} items)</span>
-              </button>
-            </div>
-
-            <div class="data-action">
-              <div class="action-icon info">📤</div>
-              <div class="action-content">
-                <h4>{{ $t('settings.import_products') }}</h4>
-                <p>{{ $t('settings.import_products_desc') }}</p>
-              </div>
-              <label class="btn btn-info" :class="{ 'is-loading': importingExcel }">
-                <span v-if="importingExcel" class="btn-loading">
-                  <span class="loader-inline"></span> Importing...
-                </span>
-                <span v-else>📊 Choose File</span>
-                <input 
-                  type="file" 
-                  id="import-excel-file" 
-                  accept=".xlsx, .xls" 
-                  @change="handleImportProductsExcel" 
-                  style="display: none;" 
-                  :disabled="importingExcel"
-                >
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Full Backup/Restore -->
-      <div class="card">
-        <div class="card-header">💾 Complete Data Backup</div>
-        <div class="card-body">
-          <p class="card-description">
-            Backup all application data (Products, Sales, Customers, Settings) to a JSON file. Restore from backup to recover all data.
-            <strong>Note:</strong> Restoring will overwrite all current data.
-          </p>
-
-          <div class="data-action-group">
-            <div class="data-action">
-              <div class="action-icon warning">⬇️</div>
-              <div class="action-content">
-                <h4>{{ $t('settings.export_all') }}</h4>
-                <p>{{ $t('settings.export_all_desc') }}</p>
-              </div>
-              <button 
-                class="btn btn-warning" 
-                @click="handleExportAllDataJSON" 
-                :disabled="exportingJson"
-              >
-                <span v-if="exportingJson" class="btn-loading">
-                  <span class="loader-inline"></span> Exporting...
-                </span>
-                <span v-else>💾 Backup Now</span>
-              </button>
-            </div>
-
-            <div class="data-action">
-              <div class="action-icon info">⬆️</div>
-              <div class="action-content">
-                <h4>{{ $t('settings.restore_backup') }}</h4>
-                <p>{{ $t('settings.restore_backup_desc') }}</p>
-              </div>
-              <label class="btn btn-primary" :class="{ 'is-loading': importingJson }">
-                <span v-if="importingJson" class="btn-loading">
-                  <span class="loader-inline"></span> Restoring...
-                </span>
-                <span v-else>💾 Restore</span>
-                <input 
-                  type="file" 
-                  id="import-file-json" 
-                  accept=".json" 
-                  @change="handleImportAllDataJSON" 
-                  style="display: none;" 
-                  :disabled="importingJson"
-                >
-              </label>
-            </div>
-          </div>
-
-          <div class="backup-info">
-            <div class="info-item">
-              <strong>Last Backup:</strong> {{ lastBackupTime }}
-            </div>
-            <div class="info-item">
-              <strong>Data Size:</strong> {{ estimatedDataSize }}
-            </div>
-            <div class="info-item">
-              <strong>Total Records:</strong> {{ totalRecords }}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SYSTEM TAB -->
-    <div v-show="activeTab === 'system'" class="settings-section">
-      <!-- System Information -->
-      <div class="card">
-        <div class="card-header">ℹ️ {{ $t('settings.system_info') }}</div>
-        <div class="card-body">
-          <div class="info-grid">
-            <div class="info-card">
-              <span class="info-label">{{ $t('settings.app_version') }}</span>
-              <span class="info-value">{{ appVersion }}</span>
-            </div>
-            <div class="info-card">
-              <span class="info-label">{{ $t('settings.current_theme') }}</span>
-              <span class="info-value">{{ settingsStore.theme === 'dark' ? '🌙 Dark' : '☀️ Light' }}</span>
-            </div>
-            <div class="info-card">
-              <span class="info-label">{{ $t('settings.products_loaded') }}</span>
-              <span class="info-value">{{ productStore.products.length }}</span>
-            </div>
-            <div class="info-card">
-              <span class="info-label">{{ $t('settings.sales_records') }}</span>
-              <span class="info-value">{{ salesStore.sales.length }}</span>
-            </div>
-            <div class="info-card">
-              <span class="info-label">{{ $t('settings.customers_count') }}</span>
-              <span class="info-value">{{ customerStore.customers.length }}</span>
-            </div>
-            <div class="info-card">
-              <span class="info-label">{{ $t('settings.storage_used') }}</span>
-              <span class="info-value">{{ storageUsed }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Danger Zone -->
-      <div class="card danger-card">
-        <div class="card-header danger-header">⚠️ Danger Zone</div>
-        <div class="card-body">
-          <p class="danger-warning">
-            <strong>Warning:</strong> The following actions are irreversible and will delete all stored application data including Products, Sales, Customers, and Settings. Please proceed with caution!
-          </p>
-
-          <div class="danger-actions">
-            <button 
-              class="btn btn-danger btn-large" 
-              @click="handleSystemReset"
-            >
-              🗑️ Clear All Application Data
-            </button>
-          </div>
-
-          <div class="danger-info">
-            <p>This action will:</p>
-            <ul>
-              <li>{{ $t('settings.delete_products') }}</li>
-              <li>{{ $t('settings.delete_sales') }}</li>
-              <li>{{ $t('settings.delete_customers') }}</li>
-              <li>{{ $t('settings.reset_settings') }}</li>
-              <li>{{ $t('settings.clear_cache') }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
-import ThemeSwitcher from '@/components/common/ThemeSwitcher.vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useProductStore } from '@/stores/productStore';
-import { useSalesStore } from '@/stores/salesStore';
-import { useCustomerStore } from '@/stores/customerStore';
 import { useToastStore } from '@/stores/toastStore';
 import * as XLSX from 'xlsx';
 
 const settingsStore = useSettingsStore();
 const productStore = useProductStore();
-const salesStore = useSalesStore();
-const customerStore = useCustomerStore();
 const toastStore = useToastStore();
 
-const activeTab = ref('general');
-const originalSettings = reactive({});
+const activeTab = ref('company');
+const settings = reactive({
+  storeName: '',
+  company: {},
+  formats: {},
+  numberSeries: { sales: {}, purchase: {}, quotation: {} },
+  defaults: {},
+  stock: {},
+  tax: {},
+  notifications: {},
+  theme: 'light',
+  locale: 'en',
+  currencySymbol: '$',
+  lowStockThreshold: 5
+});
 
 const tabs = [
-  { id: 'general', icon: '⚙️', label: 'General' },
-  { id: 'data', icon: '💾', label: 'Data Management' },
-  { id: 'system', icon: 'ℹ️', label: 'System' }
+  { id: 'company', icon: '🏢', label: 'Company' },
+  { id: 'localization', icon: '🌍', label: 'Localization' },
+  { id: 'naming', icon: '🔢', label: 'Naming Series' },
+  { id: 'defaults', icon: '⚙️', label: 'Defaults' },
+  { id: 'stock', icon: '📦', label: 'Stock' },
+  { id: 'tax', icon: '💰', label: 'Tax' },
+  { id: 'system', icon: '🖥️', label: 'System' },
 ];
-
-const editableSettings = reactive({
-  storeName: '',
-  storeAddress: '',
-  storeEmail: '',
-  storePhone: '',
-  currencySymbol: '',
-  lowStockThreshold: 0,
-});
-
-const exportingExcel = ref(false);
-const importingExcel = ref(false);
-const exportingJson = ref(false);
-const importingJson = ref(false);
-
-const appVersion = '1.0.0';
-
-const lastBackupTime = computed(() => {
-  const lastBackup = localStorage.getItem('lastBackupTime');
-  if (!lastBackup) return 'Never';
-  const date = new Date(lastBackup);
-  return date.toLocaleString();
-});
-
-const estimatedDataSize = computed(() => {
-  const data = JSON.stringify(settingsStore.getAllApplicationData());
-  const bytes = new Blob([data]).size;
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-});
-
-const totalRecords = computed(() => {
-  return productStore.products.length + salesStore.sales.length + customerStore.customers.length;
-});
-
-const storageUsed = computed(() => {
-  let total = 0;
-  for (let key in localStorage) {
-    if (localStorage.hasOwnProperty(key)) {
-      total += localStorage[key].length + key.length;
-    }
-  }
-  if (total < 1024) return `${total} B`;
-  if (total < 1024 * 1024) return `${(total / 1024).toFixed(2)} KB`;
-  return `${(total / (1024 * 1024)).toFixed(2)} MB`;
-});
 
 onMounted(() => {
   loadSettings();
 });
 
 const loadSettings = () => {
-  editableSettings.storeName = settingsStore.storeName;
-  editableSettings.storeAddress = settingsStore.storeAddress;
-  editableSettings.storeEmail = settingsStore.storeEmail;
-  editableSettings.storePhone = settingsStore.storePhone;
-  editableSettings.currencySymbol = settingsStore.currencySymbol;
-  editableSettings.lowStockThreshold = settingsStore.lowStockThreshold;
+  // Deep copy to break reactivity with store until saved
+  const storeData = JSON.parse(JSON.stringify(settingsStore.$state));
   
-  // Store originals
-  Object.assign(originalSettings, editableSettings);
+  // Map store data to local reactive state
+  settings.storeName = storeData.storeName;
+  settings.company = storeData.company || {};
+  settings.formats = storeData.formats || {};
+  settings.numberSeries = storeData.numberSeries || { sales: {}, purchase: {}, quotation: {} };
+  settings.defaults = storeData.defaults || {};
+  settings.stock = storeData.stock || {};
+  settings.tax = storeData.tax || {};
+  settings.notifications = storeData.notifications || {};
+  settings.theme = storeData.theme;
+  settings.locale = storeData.locale;
+  settings.currencySymbol = storeData.currencySymbol;
+  settings.lowStockThreshold = storeData.lowStockThreshold;
 };
 
-const validateStoreInfo = () => {
-  if (!editableSettings.storeName.trim()) {
-    toastStore.warning('Store name cannot be empty');
-  }
+const saveSettings = () => {
+  // Update store state
+  settingsStore.storeName = settings.storeName;
+  settingsStore.company = settings.company;
+  settingsStore.formats = settings.formats;
+  settingsStore.numberSeries = settings.numberSeries;
+  settingsStore.defaults = settings.defaults;
+  settingsStore.stock = settings.stock;
+  settingsStore.tax = settings.tax;
+  settingsStore.notifications = settings.notifications;
+  settingsStore.theme = settings.theme;
+  settingsStore.locale = settings.locale;
+  settingsStore.currencySymbol = settings.currencySymbol;
+  settingsStore.lowStockThreshold = settings.lowStockThreshold;
+
+  settingsStore.saveSettings();
+  toastStore.success('Settings saved successfully!');
 };
 
-const validateEmail = () => {
-  if (editableSettings.storeEmail && !editableSettings.storeEmail.includes('@')) {
-    toastStore.warning('Please enter a valid email address');
-  }
-};
-
-const resetStoreInfo = () => {
-  editableSettings.storeName = originalSettings.storeName;
-  editableSettings.storeAddress = originalSettings.storeAddress;
-  editableSettings.storeEmail = originalSettings.storeEmail;
-  editableSettings.storePhone = originalSettings.storePhone;
-  toastStore.info('Store information reset');
-};
-
-const resetPreferences = () => {
-  editableSettings.currencySymbol = originalSettings.currencySymbol;
-  editableSettings.lowStockThreshold = originalSettings.lowStockThreshold;
-  toastStore.info('Preferences reset');
-};
-
-const handleStoreInfoUpdate = () => {
-  if (!editableSettings.storeName.trim()) {
-    toastStore.error('Store name cannot be empty');
-    return;
-  }
-
-  settingsStore.updateStoreInfo({
-    name: editableSettings.storeName,
-    address: editableSettings.storeAddress,
-    email: editableSettings.storeEmail,
-    phone: editableSettings.storePhone,
-  });
-
-  Object.assign(originalSettings, editableSettings);
-  toastStore.success('✓ Store information updated successfully');
-};
-
-const handlePreferencesUpdate = () => {
-  if (!editableSettings.currencySymbol.trim()) {
-    toastStore.error('Currency symbol cannot be empty');
-    return;
-  }
-
-  if (editableSettings.lowStockThreshold < 0) {
-    toastStore.error('Low stock threshold must be non-negative');
-    return;
-  }
-
-  let updated = false;
-  if (settingsStore.currencySymbol !== editableSettings.currencySymbol) {
-    if (settingsStore.updateCurrencySymbol(editableSettings.currencySymbol)) {
-      updated = true;
-    }
-  }
-  if (settingsStore.lowStockThreshold !== editableSettings.lowStockThreshold) {
-    if (settingsStore.updateLowStockThreshold(editableSettings.lowStockThreshold)) {
-      updated = true;
-    }
-  }
-
-  if (updated) {
-    Object.assign(originalSettings, editableSettings);
-    toastStore.success('✓ Preferences updated successfully');
-  } else {
-    toastStore.info('No changes to save');
-  }
-};
-
+// Data Management Functions (Reused)
 const handleExportProductsExcel = async () => {
-  if (productStore.products.length === 0) {
-    toastStore.info('No products to export');
-    return;
-  }
-
-  exportingExcel.value = true;
-  toastStore.info('Exporting products to Excel...');
-
+  if (productStore.products.length === 0) return toastStore.info('No products to export');
   try {
-    await new Promise(r => setTimeout(r, 200));
-    
-    const exportData = productStore.products.map(p => ({
-      "No.": p.no || '',
-      "Serial Number": p.serial_number || '',
-      "Category": p.category || '',
-      "Company": p.company || '',
-      "Model": p.model || '',
-      "Condition": p.condition || 'New',
-      "CPU": p.cpu || '',
-      "Gen": p.gen || '',
-      "Screen Touch (Yes/No)": p.screen_touch ? 'Yes' : 'No',
-      "RAM": p.ram || '',
-      "Quantity": p.quantity,
-      "HDD": p.hdd || '',
-      "SSD": p.ssd || '',
-      "VGA Type": p.vga_type || '',
-      "VGA Memory": p.vga_memory || '',
-      "Base Price": p.base_price,
-      "Selling Price": p.selling_price,
-      "Best Price": p.best_price,
-      "Supplier": p.supplier || '',
-      "Purchase Date": p.purchase_date || '',
-      "Warranty": p.warranty || '',
-      "Dimensions": p.dimensions || '',
-      "Weight": p.weight || '',
-      "Color": p.color || '',
-      "Description": p.description || '',
-      "Image URL": p.image_url || '',
-      "Tags": p.tags || ''
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Products");
-    
-    const fileName = `${settingsStore.storeName.replace(/\s+/g, '_')}_Products_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-    
-    toastStore.success(`✓ Exported ${productStore.products.length} products successfully!`);
-  } catch (err) {
-    console.error('Excel export error:', err);
-    toastStore.error(`Error exporting products: ${err.message}`);
-  } finally {
-    exportingExcel.value = false;
+    const ws = XLSX.utils.json_to_sheet(productStore.products);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Products");
+    XLSX.writeFile(wb, `Products_${new Date().toISOString().slice(0,10)}.xlsx`);
+    toastStore.success('Exported products successfully');
+  } catch (e) {
+    toastStore.error('Export failed: ' + e.message);
   }
-};
-
-const handleImportProductsExcel = async (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  importingExcel.value = true;
-  toastStore.info('Importing products from Excel...');
-
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      await new Promise(r => setTimeout(r, 200));
-      
-      const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
-      const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
-
-      if (jsonData.length === 0) {
-        toastStore.warning('Excel sheet is empty or unreadable');
-        return;
-      }
-
-      if (!confirm(`This will REPLACE all ${productStore.products.length} current products with ${jsonData.length} products from Excel.\n\nAre you absolutely sure?`)) {
-        toastStore.info('Import cancelled');
-        return;
-      }
-
-      const importedProducts = jsonData.map((row) => {
-        let purchaseDate = row["Purchase Date"];
-        if (purchaseDate instanceof Date && !isNaN(purchaseDate)) {
-          purchaseDate = purchaseDate.toISOString().split('T')[0];
-        } else if (typeof purchaseDate === 'number' && purchaseDate > 0) {
-          const excelEpoch = new Date(1899, 11, 30);
-          purchaseDate = new Date(excelEpoch.getTime() + purchaseDate * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-        } else if (typeof purchaseDate === 'string' && purchaseDate.trim() !== '') {
-          const parsedDate = new Date(purchaseDate.trim());
-          purchaseDate = !isNaN(parsedDate) ? parsedDate.toISOString().split('T')[0] : '';
-        } else {
-          purchaseDate = '';
-        }
-
-        return {
-          no: String(row["No."] || '').trim(),
-          serial_number: String(row["Serial Number"] || '').trim(),
-          category: String(row["Category"] || '').trim(),
-          company: String(row["Company"] || '').trim(),
-          model: String(row["Model"] || '').trim(),
-          condition: String(row["Condition"] || 'New').trim(),
-          cpu: String(row["CPU"] || '').trim(),
-          gen: String(row["Gen"] || '').trim(),
-          screen_touch: String(row["Screen Touch (Yes/No)"] || 'No').toLowerCase() === 'yes',
-          ram: String(row["RAM"] || '').trim(),
-          quantity: parseInt(row["Quantity"], 10) || 0,
-          hdd: String(row["HDD"] || '').trim(),
-          ssd: String(row["SSD"] || '').trim(),
-          vga_type: String(row["VGA Type"] || '').trim(),
-          vga_memory: String(row["VGA Memory"] || '').trim(),
-          base_price: parseFloat(row["Base Price"]) || 0,
-          selling_price: parseFloat(row["Selling Price"]) || 0,
-          best_price: parseFloat(row["Best Price"]) || 0,
-          supplier: String(row["Supplier"] || '').trim(),
-          purchase_date: purchaseDate,
-          warranty: String(row["Warranty"] || '').trim(),
-          dimensions: String(row["Dimensions"] || '').trim(),
-          weight: String(row["Weight"] || '').trim(),
-          color: String(row["Color"] || '').trim(),
-          description: String(row["Description"] || '').trim(),
-          image_url: String(row["Image URL"] || '').trim(),
-          tags: String(row["Tags"] || '').trim()
-        };
-      });
-
-      await productStore.clearAllProductsData(true);
-      let importedCount = 0;
-      for (const prod of importedProducts) {
-        if (prod.model && prod.company && prod.category && prod.condition && !isNaN(prod.quantity) && !isNaN(prod.selling_price)) {
-          await productStore.addProduct(prod);
-          importedCount++;
-        }
-      }
-      productStore._saveProductsToLocalStorage();
-
-      toastStore.success(`✓ Imported ${importedCount} products! (${importedProducts.length - importedCount} rows skipped)`);
-    } catch (err) {
-      console.error('Excel import error:', err);
-      toastStore.error(`Error importing products: ${err.message}`);
-    } finally {
-      event.target.value = null;
-      importingExcel.value = false;
-    }
-  };
-  reader.readAsArrayBuffer(file);
 };
 
 const handleExportAllDataJSON = () => {
-  exportingJson.value = true;
-  toastStore.info('Exporting all application data...');
-
   try {
-    const dataToExport = settingsStore.getAllApplicationData();
-    const dataStr = JSON.stringify(dataToExport, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    const exportFileDefaultName = `${settingsStore.storeName.replace(/\s+/g, '_')}_FullBackup_${new Date().toISOString().slice(0,10).replace(/-/g,'')}.json`;
-
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-    linkElement.remove();
-
-    localStorage.setItem('lastBackupTime', new Date().toISOString());
-    toastStore.success('✓ Full application data exported successfully!');
-  } catch (err) {
-    console.error('JSON export error:', err);
-    toastStore.error(`Error exporting data: ${err.message}`);
-  } finally {
-    exportingJson.value = false;
+    const data = settingsStore.getAllApplicationData();
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    toastStore.success('Backup created successfully');
+  } catch (e) {
+    toastStore.error('Backup failed: ' + e.message);
   }
-};
-
-const handleImportAllDataJSON = (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  importingJson.value = true;
-  toastStore.info('Importing application data from JSON...');
-
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const importedData = JSON.parse(e.target.result);
-
-      if (!confirm('⚠️ This will OVERWRITE ALL current application data including:\n- Products\n- Sales Records\n- Customers\n- Settings\n\nAre you absolutely sure?')) {
-        toastStore.info('Restore cancelled');
-        return;
-      }
-
-      await settingsStore.importAllApplicationData(importedData);
-
-      loadSettings();
-      localStorage.setItem('lastBackupTime', new Date().toISOString());
-
-      toastStore.success('✓ Full application data restored successfully! (Refresh to see all changes)', 5000);
-    } catch (err) {
-      console.error('JSON import error:', err);
-      toastStore.error(`Error importing data: ${err.message}`, 5000, true);
-    } finally {
-      event.target.value = null;
-      importingJson.value = false;
-    }
-  };
-  reader.readAsText(file);
 };
 
 const handleSystemReset = async () => {
-  if (!confirm('☢️ EXTREME DANGER! This will permanently delete ALL stored application data.\n\nThis action is IRREVERSIBLE!\n\nAre you absolutely certain?')) {
-    return;
-  }
-
-  const confirmationText = "ERASE ALL DATA";
-  const userInput = prompt(`To confirm this irreversible action, please type exactly:\n"${confirmationText}"`);
-
-  if (userInput !== confirmationText) {
-    toastStore.info('✓ Data deletion cancelled. Confirmation text did not match.');
-    return;
-  }
-
-  toastStore.warning('⚠️ Resetting all application data...');
-
-  try {
+  if (confirm('Are you sure you want to factory reset? This cannot be undone.')) {
     await settingsStore.resetAllApplicationData();
-    loadSettings();
-    toastStore.success('✓ Application data has been reset. Initial seed data reapplied.', 5000);
-    setTimeout(() => window.location.reload(), 1500);
-  } catch (err) {
-    console.error('Reset error:', err);
-    toastStore.error(`Error during reset: ${err.message}`);
+    window.location.reload();
   }
 };
 </script>
 
 <style scoped>
-.settings-page {
-  max-width: 1000px;
-  margin: 0 auto;
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  .form-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-.settings-header {
-  margin-bottom: var(--space-xl);
-}
-
-.page-subtitle {
-  color: var(--text-color-muted);
-  font-size: 1rem;
-  margin-top: var(--space-sm);
-}
-
-/* Settings Tabs */
-.settings-tabs {
-  display: flex;
-  gap: var(--space-md);
-  margin-bottom: var(--space-xl);
-  border-bottom: 2px solid var(--border-color);
-  overflow-x: auto;
-}
-
-.tab-button {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  color: var(--text-color-muted);
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-bottom: -2px;
-}
-
-.tab-button:hover {
-  color: var(--text-color);
-  background-color: var(--bg-color-offset);
-}
-
-.tab-button.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-}
-
-.tab-icon {
-  font-size: 1.2rem;
-}
-
-.tab-label {
-  white-space: nowrap;
-}
-
-.settings-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-/* Settings Row */
-.settings-row {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-lg);
-  margin-bottom: var(--space-lg);
-}
-
-.settings-left {
-  flex: 1;
-}
-
-.settings-right {
-  flex: 0 0 auto;
-}
-
-.setting-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--text-color);
-  margin-bottom: var(--space-xs);
-}
-
-.setting-description {
-  font-size: 0.9rem;
-  color: var(--text-color-muted);
-  margin: 0;
-}
-
-.theme-switcher-inline {
-  display: flex;
-}
-
-/* Form Enhancements */
+.form-group { display: flex; flex-direction: column; }
 .form-label {
-  display: block;
-  font-weight: 600;
-  color: var(--text-color);
-  margin-bottom: var(--space-xs);
-  font-size: 0.95rem;
+  font-size: 12px; color: var(--text-muted); margin-bottom: 6px;
+  font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em;
+}
+.form-label.required::after { content: " *"; color: var(--danger-color); }
+
+.form-input, .form-select {
+  background: var(--input-background);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 14px; color: var(--text-main);
+}
+.form-input:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  outline: none;
 }
 
-.form-text {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--text-color-muted);
-  margin-top: var(--space-xs);
-}
-
-.form-actions {
-  display: flex;
-  gap: var(--space-md);
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--border-color);
-}
-
-.form-actions .btn {
-  flex: 0 0 auto;
-}
-
-/* Input with Preview */
-.input-with-preview {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.input-with-preview .form-control {
-  flex: 0 0 80px;
-}
-
-.currency-preview {
-  padding: var(--space-sm) var(--space-md);
-  background-color: var(--bg-color-offset);
-  border-radius: var(--border-radius-sm);
-  font-weight: 500;
-  white-space: nowrap;
-  color: var(--text-color);
-}
-
-/* Data Management */
-.card-description {
-  margin: 0 0 var(--space-lg) 0;
-  color: var(--text-color-muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.data-action-group {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
-.data-action {
-  display: flex;
-  align-items: center;
-  gap: var(--space-lg);
-  padding: var(--space-lg);
-  background-color: var(--bg-color-offset);
-  border-radius: var(--border-radius);
+.card {
+  background: var(--card-bg-color);
   border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
-
-.action-icon {
-  font-size: 2rem;
-  min-width: 50px;
-  text-align: center;
+.card-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-color);
 }
+.card-title { font-size: 16px; font-weight: 600; margin: 0; }
+.card-body { padding: 24px; }
 
-.action-icon.success { color: var(--success-color); }
-.action-icon.info { color: var(--info-color); }
-.action-icon.warning { color: var(--warning-color); }
-
-.action-content {
-  flex: 1;
+.btn {
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: all 0.2s; border: 1px solid transparent;
 }
-
-.action-content h4 {
-  margin: 0 0 var(--space-xs) 0;
-  color: var(--text-color);
-  font-size: 1rem;
-}
-
-.action-content p {
-  margin: 0;
-  color: var(--text-color-muted);
-  font-size: 0.9rem;
-}
-
-.data-action .btn {
-  flex-shrink: 0;
-}
-
-.backup-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-md);
-  margin-top: var(--space-lg);
-  padding-top: var(--space-lg);
-  border-top: 1px solid var(--border-color);
-}
-
-.info-item {
-  padding: var(--space-md);
-  background-color: var(--bg-color-offset);
-  border-radius: var(--border-radius-sm);
-  font-size: 0.9rem;
-}
-
-.info-item strong {
-  display: block;
-  color: var(--text-color);
-  margin-bottom: var(--space-xs);
-}
-
-/* System Information */
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--space-lg);
-}
-
-.info-card {
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-lg);
-  background-color: var(--bg-color-offset);
-  border-radius: var(--border-radius);
-  border: 1px solid var(--border-color);
-  text-align: center;
-}
-
-.info-label {
-  font-size: 0.85rem;
-  color: var(--text-color-muted);
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  margin-bottom: var(--space-xs);
-}
-
-.info-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-color);
-}
-
-/* Danger Zone */
-.danger-card {
-  border-left: 5px solid var(--danger-color);
-}
-
-.danger-header {
-  color: var(--danger-color);
-}
-
-.danger-warning {
-  padding: var(--space-lg);
-  background-color: rgba(220, 38, 38, 0.1);
-  border-left: 4px solid var(--danger-color);
-  border-radius: var(--border-radius-sm);
-  color: var(--text-color);
-  margin-bottom: var(--space-lg);
-}
-
-[data-theme="dark"] .danger-warning {
-  background-color: rgba(220, 38, 38, 0.15);
-}
-
-.danger-actions {
-  margin-bottom: var(--space-lg);
-}
-
-.btn-large {
-  padding: var(--space-md) var(--space-xl);
-  font-size: 1rem;
-  min-width: 200px;
-}
-
-.danger-info {
-  padding: var(--space-lg);
-  background-color: var(--bg-color-offset);
-  border-radius: var(--border-radius-sm);
-  font-size: 0.9rem;
-  color: var(--text-color-muted);
-}
-
-.danger-info ul {
-  margin: var(--space-md) 0 0 var(--space-lg);
-  padding-left: var(--space-lg);
-}
-
-.danger-info li {
-  margin-bottom: var(--space-xs);
-  color: var(--text-color);
-}
-
-/* Loading States */
-.btn-loading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.loader-inline {
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.75s linear infinite;
-}
-
-.is-loading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .settings-tabs {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .tab-button {
-    padding: var(--space-md);
-  }
-
-  .tab-label {
-    display: none;
-  }
-
-  .settings-row {
-    flex-direction: column;
-    gap: var(--space-md);
-  }
-
-  .data-action {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .action-content {
-    order: 2;
-  }
-
-  .data-action .btn {
-    width: 100%;
-  }
-
-  .form-actions {
-    flex-direction: column;
-  }
-
-  .form-actions .btn {
-    width: 100%;
-  }
-
-  .info-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .input-with-preview {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .input-with-preview .form-control {
-    flex: 1;
-  }
-
-  .currency-preview {
-    text-align: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .info-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .backup-info {
-    grid-template-columns: 1fr;
-  }
-}
+.btn-primary { background: var(--primary-color); color: white; }
+.btn-secondary { background: white; border-color: var(--border-color); color: var(--text-main); }
+.btn-danger { background: var(--danger-color); color: white; }
 </style>

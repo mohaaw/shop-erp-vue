@@ -54,6 +54,7 @@
         "data": "Data Management",
         "system": "System",
         "appearance": "Appearance & Theme",
+        "theme_select": "Theme Selection",
         "theme_light": "Light",
         "theme_dark": "Dark",
         "language": "Language",
@@ -85,19 +86,6 @@
         "customers_count": "Customers",
         "storage_used": "Storage Used",
         "danger_zone": "Danger Zone",
-        "reset_system": "Reset System",
-        "reset_warning": "This action cannot be undone. This will permanently delete all data.",
-        "delete_products": "Delete all products and inventory",
-        "delete_sales": "Delete all sales records and transactions",
-        "delete_customers": "Delete all customer information",
-        "reset_settings": "Reset application settings to defaults",
-        "clear_cache": "Clear all application cache"
-    },
-    "admin": {
-        "title": "Admin Dashboard",
-        "system_status": "System Status",
-        "user_management": "User Management",
-        "system_logs": "System Logs",
         "advanced_settings": "Advanced Settings"
     }
 }

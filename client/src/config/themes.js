@@ -1,149 +1,123 @@
-// ERPNext-inspired professional theme system
-// Based on ERPNext v14+ "Timeless Day" and "Timeless Night" themes
 export const themePresets = {
     light: {
-        name: 'Light',
-        description: 'Clean professional light theme (ERPNext Timeless Day)',
+        name: 'Frappe Flat',
+        description: 'Clean, professional ERPNext-inspired theme',
         colors: {
-            // Backgrounds
-            primary: '#2490EF',        // ERPNext blue
-            secondary: '#6C757D',      // Gray
-            accent: '#17A2B8',         // Teal
-            background: '#F7F7F7',     // Light gray background
-            backgroundOffset: '#FFFFFF',
-            cardBackground: '#FFFFFF', // Solid white cards
+            // Core Backgrounds
+            background: '#F4F5F7',        // Light Gray (Desk Background)
+            backgroundOffset: '#FFFFFF',  // White (Card Background)
+            cardBackground: '#FFFFFF',    // White
 
-            // Text - High contrast
-            textMain: '#171717',       // Near black
-            textMuted: '#6C757D',      // Gray
-            textInverted: '#FFFFFF',
+            // Text Colors
+            textMain: '#1F272E',          // Dark Slate (Primary Text)
+            textMuted: '#6C7680',         // Muted Gray (Secondary Text)
+            textLight: '#8D99A6',         // Light Gray (Disabled/Placeholder)
+            textInverted: '#FFFFFF',      // White text on dark backgrounds
 
-            // UI Elements
-            borderColor: '#DDE2E5',
-            navBg: '#FFFFFF',
-            navText: '#171717',
+            // Brand Colors
+            primary: '#2490EF',           // ERPNext Blue
+            primaryHover: '#1C7CD6',
+            secondary: '#718096',         // Slate Gray
+            accent: '#2490EF',            // Same as primary for consistency
 
-            // Status colors
+            // Borders & Separators
+            border: '#E2E6EA',            // Very Light Gray
+            borderHover: '#D1D5DB',
+
+            // Status Colors (Standardized)
             success: '#28A745',
-            danger: '#DC3545',
             warning: '#FFC107',
-            info: '#2490EF'
+            danger: '#DC3545',
+            info: '#17A2B8',
+
+            // UI Elements
+            inputBackground: '#F4F5F7',   // Light Gray Input
+            inputBorder: '#DFE2E5',
+
+            // Sidebar
+            sidebarBackground: '#FFFFFF', // White Sidebar
+            sidebarBorder: '#E2E6EA',
+            sidebarText: '#1F272E',
+            sidebarActiveBg: '#F0F4F8',   // Very Light Blue
+            sidebarActiveText: '#2490EF'
         }
     },
-
     dark: {
-        name: 'Dark',
-        description: 'Professional dark theme (ERPNext Timeless Night)',
+        name: 'Frappe Dark',
+        description: 'Professional dark mode for ERPNext',
         colors: {
-            // Backgrounds
-            primary: '#3A8EF6',        // Lighter blue for dark bg
-            secondary: '#A8A8A8',      // Light gray
-            accent: '#4DD4E8',         // Bright teal
-            background: '#171717',     // Near black
-            backgroundOffset: '#1F1F1F',
-            cardBackground: '#25272E', // Dark gray cards
+            // Core Backgrounds
+            background: '#1A202C',        // Dark Gray (Desk Background)
+            backgroundOffset: '#2D3748',  // Gray-800 (Card Background)
+            cardBackground: '#2D3748',    // Gray-800
 
-            // Text - High contrast
-            textMain: '#F7F7F7',       // Off white
-            textMuted: '#A8A8A8',      // Light gray
-            textInverted: '#171717',
+            // Text Colors
+            textMain: '#F9FAFB',          // Near White
+            textMuted: '#A0AEC0',         // Gray-400
+            textLight: '#718096',         // Gray-500
+            textInverted: '#111827',      // Dark text on light backgrounds
 
-            // UI Elements
-            borderColor: '#3A3A3A',
-            navBg: '#171717',
-            navText: '#F7F7F7',
+            // Brand Colors
+            primary: '#3B82F6',           // Bright Blue
+            primaryHover: '#60A5FA',
+            secondary: '#A0AEC0',         // Gray-400
+            accent: '#3B82F6',
 
-            // Status colors
+            // Borders & Separators
+            border: '#4A5568',            // Gray-700
+            borderHover: '#718096',
+
+            // Status Colors
             success: '#48BB78',
-            danger: '#F56565',
             warning: '#ECC94B',
-            info: '#3A8EF6'
-        }
-    },
-
-    purple: {
-        name: 'Purple',
-        description: 'Purple theme with gold accents (Custom)',
-        colors: {
-            // Backgrounds
-            primary: '#BA54F5',        // Purple
-            secondary: '#D4AF37',      // Gold accent
-            accent: '#00E5C3',         // Cyan
-            background: '#1E1E2F',
-            backgroundOffset: '#27293D',
-            cardBackground: '#27293D', // Solid
-
-            // Text - High contrast
-            textMain: '#FFFFFF',
-            textMuted: '#9A9A9A',
-            textInverted: '#1E1E2F',
+            danger: '#F56565',
+            info: '#4299E1',
 
             // UI Elements
-            borderColor: 'rgba(186, 84, 245, 0.3)',
-            navBg: '#1E1E2F',
-            navText: '#FFFFFF',
+            inputBackground: '#1A202C',
+            inputBorder: '#4A5568',
 
-            // Status colors
-            success: '#00E5C3',
-            danger: '#FF5C93',
-            warning: '#D4AF37',
-            info: '#BA54F5'
+            // Sidebar
+            sidebarBackground: '#2D3748',
+            sidebarBorder: '#4A5568',
+            sidebarText: '#E2E8F0',
+            sidebarActiveBg: '#4A5568',
+            sidebarActiveText: '#63B3ED'
         }
     }
 };
 
 export const defaultTheme = 'light';
 
-// Color keys that can be customized
-export const customizableColors = [
-    { key: 'primary', label: 'Primary Color', description: 'Main brand color' },
-    { key: 'secondary', label: 'Secondary Color', description: 'Secondary accent color' },
-    { key: 'accent', label: 'Accent Color', description: 'Highlight color' },
-    { key: 'background', label: 'Background', description: 'Main background color' },
-    { key: 'cardBackground', label: 'Card Background', description: 'Card and panel background' },
-    { key: 'textMain', label: 'Text Color', description: 'Primary text color' },
-    { key: 'textMuted', label: 'Muted Text', description: 'Secondary text color' }
-];
-
-// Helper function to get theme colors
-export function getThemeColors(themeName) {
-    return themePresets[themeName]?.colors || themePresets[defaultTheme].colors;
-}
-
-// Helper function to apply theme colors to CSS variables
-export function applyThemeColors(colors) {
+export const applyThemeColors = (colors) => {
     const root = document.documentElement;
 
-    // Map theme color keys to actual CSS variable names used by the app
-    const cssVarMapping = {
-        primary: '--primary-color',
-        secondary: '--secondary-color',
-        accent: '--accent-color',
-        background: '--bg-color',
-        backgroundOffset: '--bg-color-offset',
-        cardBackground: '--card-bg-color',
-        textMain: '--text-color',
-        textMuted: '--text-color-muted',
-        textInverted: '--text-color-inverted',
-        borderColor: '--border-color',
-        navBg: '--nav-bg-color',
-        navText: '--nav-text-color',
-        success: '--success-color',
-        danger: '--danger-color',
-        warning: '--warning-color',
-        info: '--info-color'
-    };
+    // Helper to set CSS variable
+    const set = (name, value) => root.style.setProperty(`--${name}`, value);
 
-    // Apply each color to its corresponding CSS variable
+    // Apply all colors as CSS variables
     Object.entries(colors).forEach(([key, value]) => {
-        const cssVarName = cssVarMapping[key];
-        if (cssVarName) {
-            root.style.setProperty(cssVarName, value);
-        }
+        // Convert camelCase to kebab-case for CSS variables
+        // e.g. cardBackground -> --card-background
+        const cssVarName = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+        set(cssVarName, value);
     });
-}
 
-// Helper function to validate hex color
+    // Map legacy/specific variables if needed for backward compatibility
+    if (colors.background) set('bg-color', colors.background);
+    if (colors.cardBackground) set('card-bg-color', colors.cardBackground);
+    if (colors.textMain) set('text-color', colors.textMain);
+    if (colors.textMuted) set('text-color-muted', colors.textMuted);
+    if (colors.primary) set('primary-color', colors.primary);
+    if (colors.border) set('border-color', colors.border);
+
+    // Set specific derived variables
+    set('radius-base', '6px');      // Standard ERPNext radius
+    set('radius-sm', '4px');
+    set('radius-lg', '8px');
+    set('font-family', "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif");
+};
+
 export function isValidHexColor(color) {
     return /^#[0-9A-F]{6}$/i.test(color);
 }

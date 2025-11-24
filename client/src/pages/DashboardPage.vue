@@ -230,12 +230,13 @@ const repeatCustomerRate = computed(() => {
 const aovTrend = computed(() => 0); // Placeholder as logic was missing in original
 </script>
 
-<style scoped>
-.glass-btn {
-  backdrop-filter: blur(4px);
-  background: rgba(255,255,255,0.5);
+/* Glass styles removed for Flat theme */
+.btn-secondary {
+  background: white;
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
 }
-[data-theme="dark"] .glass-btn {
-  background: rgba(255,255,255,0.1);
+.btn-secondary:hover {
+  background: var(--bg-color);
+  border-color: var(--primary-color);
 }
-</style>

@@ -32,30 +32,45 @@ const icons = {
 <style scoped>
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-md);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
 }
 .action-button {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: var(--space-md);
+  padding: 16px;
   text-align: center;
   font-size: 0.9rem;
-  height: 90px;
+  height: 100px;
   text-decoration: none;
-  border-radius: var(--border-radius);
+  border-radius: var(--radius-base);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  background: var(--bg-color);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+.action-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-color: var(--primary-color);
 }
 .action-button span[v-html] :deep(svg) {
   width: 24px;
   height: 24px;
-  margin-bottom: var(--space-xs);
+  margin-bottom: 8px;
+  color: var(--primary-color);
 }
-.btn-primary span[v-html] :deep(svg) { stroke: var(--text-on-primary); }
-.btn-secondary span[v-html] :deep(svg) { stroke: var(--text-color-inverted); }
-[data-theme="light"] .btn-secondary span[v-html] :deep(svg) { stroke: var(--text-color-inverted); }
-[data-theme="dark"] .btn-secondary span[v-html] :deep(svg) { stroke: var(--text-color-inverted); }
-.btn-warning span[v-html] :deep(svg) { stroke: var(--text-on-primary); }
-[data-theme="light"] .btn-warning span[v-html] :deep(svg) { stroke: var(--text-color); }
+.btn-primary { background: var(--primary-color); color: white; border: none; }
+.btn-primary:hover { background: var(--primary-hover); color: white; }
+.btn-primary span[v-html] :deep(svg) { color: white; stroke: white; }
+
+.btn-secondary { background: var(--bg-color); border: 1px solid var(--border-color); }
+.btn-secondary:hover { border-color: var(--primary-color); }
+
+.btn-warning { background: rgba(255, 193, 7, 0.1); color: var(--warning-color); border: 1px solid transparent; }
+.btn-warning:hover { background: rgba(255, 193, 7, 0.2); }
+.btn-warning span[v-html] :deep(svg) { color: var(--warning-color); stroke: var(--warning-color); }
 </style>

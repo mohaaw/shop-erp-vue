@@ -13,15 +13,71 @@ import { themePresets, defaultTheme, applyThemeColors } from '../config/themes';
 
 const LS_PREFIX = 'shopErpVUE_';
 const DEFAULT_SETTINGS = {
+  // Core
   storeName: "Tech Store Pro Max",
   storeAddress: "123 Tech Avenue, Circuit City",
   storeEmail: "contact@techstorepromax.com",
   storePhone: "+1-555-TECH-PRO",
   currencySymbol: "$",
-  theme: "dark",
-  lowStockThreshold: 5,
+  theme: "light",
   locale: "en",
-  customColors: null, // null means using preset colors
+  lowStockThreshold: 5,
+  customColors: null,
+
+  // Company Settings
+  company: {
+    abbreviation: 'TSP',
+    country: 'Egypt',
+    currency: 'EGP',
+    timezone: 'Africa/Cairo',
+    fiscalYearStart: '01-01',
+    logo: null,
+    description: ''
+  },
+
+  // Localization
+  formats: {
+    date: 'YYYY-MM-DD',
+    time: '24h',
+    decimalSeparator: '.',
+    thousandsSeparator: ',',
+    currencyPrecision: 2
+  },
+
+  // Number Series
+  numberSeries: {
+    sales: { prefix: 'INV-', current: 1, padding: 5 },
+    purchase: { prefix: 'PO-', current: 1, padding: 5 },
+    quotation: { prefix: 'QTN-', current: 1, padding: 5 }
+  },
+
+  // Defaults
+  defaults: {
+    warehouse: 'Main Warehouse',
+    paymentTerms: 'Net 30',
+    uom: 'Nos'
+  },
+
+  // Stock
+  stock: {
+    allowNegativeStock: false,
+    valuationMethod: 'FIFO',
+    autoReserve: true
+  },
+
+  // Tax
+  tax: {
+    name: 'VAT',
+    rate: 14,
+    inclusive: false
+  },
+
+  // Notifications
+  notifications: {
+    email: { enabled: false },
+    lowStock: { enabled: true },
+    inApp: { enabled: true }
+  }
 };
 
 export const useSettingsStore = defineStore('settings', {
@@ -47,6 +103,14 @@ export const useSettingsStore = defineStore('settings', {
         lowStockThreshold: this.lowStockThreshold,
         locale: this.locale,
         customColors: this.customColors,
+        // New Fields
+        company: this.company,
+        formats: this.formats,
+        numberSeries: this.numberSeries,
+        defaults: this.defaults,
+        stock: this.stock,
+        tax: this.tax,
+        notifications: this.notifications
       };
       localStorage.setItem(LS_PREFIX + 'appSettings', JSON.stringify(settingsToSave));
     },
@@ -66,7 +130,7 @@ export const useSettingsStore = defineStore('settings', {
       this.saveSettings();
     },
     toggleTheme() {
-      const themes = ['dark', 'light', 'purple'];
+      const themes = ['light', 'dark'];
       const currentIndex = themes.indexOf(this.theme);
       const nextIndex = (currentIndex + 1) % themes.length;
       this.setTheme(themes[nextIndex]);
