@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { useStockMovementStore } from '@/stores/stockMovementStore';
 
 const props = defineProps({

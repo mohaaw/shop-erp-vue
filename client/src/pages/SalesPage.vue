@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useSalesStore } from '@/stores/salesStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useCustomerStore } from '@/stores/customerStore';

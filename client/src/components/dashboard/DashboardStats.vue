@@ -88,7 +88,7 @@
 <script setup>
 import NumberCard from '@/components/dashboard/NumberCard.vue';
 
-const props = defineProps({
+defineProps({
   editMode: Boolean,
   visibleWidgets: Object,
   currencySymbol: String,

@@ -102,7 +102,7 @@ const printReceiptContent = () => {
         .map(styleSheet => {
           try {
             return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('\n');
-          } catch (e) {
+          } catch {
             if (styleSheet.href) return `<link rel="stylesheet" href="${styleSheet.href}">`;
             return '';
           }

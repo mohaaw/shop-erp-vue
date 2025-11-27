@@ -49,7 +49,7 @@
 import { ref } from 'vue';
 import { useSettingsStore } from '@/stores/settingsStore';
 
-const props = defineProps({
+defineProps({
   product: {
     type: Object,
     required: true
@@ -141,6 +141,7 @@ const handleImageError = () => {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 .product-brand {

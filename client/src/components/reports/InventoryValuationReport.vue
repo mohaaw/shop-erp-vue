@@ -75,6 +75,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useProductStore } from '@/stores/productStore';
 import { useSettingsStore } from '@/stores/settingsStore';
+import { useToastStore } from '@/stores/toastStore';
 
 const productStore = useProductStore();
 const settingsStore = useSettingsStore();
@@ -97,7 +98,7 @@ const printReport = () => {
             return Array.from(styleSheet.cssRules)
               .map(rule => rule.cssText)
               .join('\n');
-          } catch (e) {
+          } catch {
             if (styleSheet.href) return `<link rel="stylesheet" href="${styleSheet.href}">`;
             return '';
           }

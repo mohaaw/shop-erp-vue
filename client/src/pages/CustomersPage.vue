@@ -81,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useCustomerStore } from '@/stores/customerStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import CustomerForm from '@/components/customers/CustomerForm.vue'; // Import the form
@@ -113,10 +113,10 @@ const closeCustomerModal = () => {
   editingCustomerId.value = null; // Clear editing ID
 };
 
-const handleCustomerSaved = (savedCustomer) => {
+const handleCustomerSaved = () => {
   // Optionally show a toast notification here
   // e.g., showToast(`${savedCustomer.name} saved successfully!`, 'success');
-  console.log("Customer saved:", savedCustomer);
+  // console.log("Customer saved:", savedCustomer);
   // The store should already be updated, so the list will react.
   // No need to manually call fetchCustomers unless your save logic doesn't update the local state.
 };

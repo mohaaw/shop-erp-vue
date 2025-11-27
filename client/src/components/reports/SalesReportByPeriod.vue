@@ -178,7 +178,7 @@ const printReport = () => {
         .map(styleSheet => {
           try {
             return Array.from(styleSheet.cssRules).map(rule => rule.cssText).join('\n');
-          } catch (e) {
+          } catch {
             if (styleSheet.href) return `<link rel="stylesheet" href="${styleSheet.href}">`;
             return '';
           }
@@ -238,7 +238,7 @@ onMounted(async () => {
 }
 [data-theme="dark"] .btn-outline-secondary { color: var(--nav-text-color); border-color: var(--nav-text-color); }
 [data-theme="dark"] .btn-outline-secondary:hover { color: var(--bg-color); background-color: var(--nav-text-color); }
-.report-title-screen { /* Screen only title */ }
+
 .form-alert.alert-danger { /* Ensure this style is available if errors are shown */
   color: var(--danger-color); background-color: #f8d7da; border-color: #f5c6cb;
   padding: var(--space-md); border: 1px solid transparent; border-radius: var(--border-radius);

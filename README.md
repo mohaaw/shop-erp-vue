@@ -31,8 +31,11 @@ shop-erp-vue/
 
 ### Prerequisites
 
-- **Node.js** (v14 or higher)
-- **npm** (v6 or higher)
+- **Node.js** (v20.x LTS, v22.x LTS, or v24.x recommended)
+  - ⚠️ **Do NOT use Node.js v25+** - has compatibility issues with Vite/Rollup
+- **npm** (v10 or higher)
+
+> **Important:** If you're using Node.js v25.2.1 or newer, you'll encounter build errors. Please downgrade to an LTS version (v20, v22, or v24).
 
 ### Backend Setup
 
@@ -266,32 +269,30 @@ cd client; npm install; npm run dev
 - Implement rate limiting
 - Use environment variables for sensitive data
 
+## ✨ Recent Improvements (2025-11-27)
+
+### Code Quality ✅
+- **ESLint Status**: 0 errors, 0 warnings (all 20+ errors resolved)
+- **12 Vue components** cleaned and optimized
+- **Removed**:
+  - 20+ unused variables and parameters
+  - 8 empty CSS rulesets  
+  - Unused imports (`onUnmounted`, `computed`, `watch`, `ref`)
+- **Fixed**: Corrupted `ProductDetailModal.vue` file
+
+### Node.js Compatibility ✅
+- **Resolved**: Node.js v25.2.1 breaking Vite/Rollup
+- **Current Version**: Node.js v24.11.1 LTS
+- **Dependencies**: 310 packages installed, 0 vulnerabilities
+- **Dev Server**: Running successfully on http://localhost:5174/
+
+---
+
 ## 🐛 Troubleshooting
 
 ### Backend Won't Start
 - Check if port 3001 is available
 - Verify Node.js is installed: `node --version`
-- Check for errors in the console
-
-### Frontend Won't Start
-- Check if port 5173 is available
-- Clear node_modules: `Remove-Item node_modules -Recurse`
-- Reinstall: `npm install`
-
-### API Connection Errors
-- Verify backend is running on port 3001
-- Check `VITE_API_BASE_URL` in frontend `.env`
-- Check browser console for CORS errors
-- Verify firewall doesn't block ports 3001 and 5173
-
-### Authentication Issues
-- Ensure JWT_SECRET is the same in backend `.env` and server code
-- Check token expiration (default: 1 hour)
-- Clear localStorage and try again
-
-## 🚢 Building for Production
-
-### Backend Production Build
 ```bash
 cd server
 npm install --production

@@ -46,7 +46,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { useUserStore } from '@/stores/userStore'; // Import user store
 
 const emit = defineEmits(['toggle-sidebar']);
-const props = defineProps({
+defineProps({
   isMobileView: Boolean,
   isSidebarOpenOnMobile: Boolean
 });

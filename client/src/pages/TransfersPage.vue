@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useProductStore } from '@/stores/productStore';
 import { useLocationStore } from '@/stores/locationStore';
 import { useRoute } from 'vue-router';

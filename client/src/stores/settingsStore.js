@@ -85,7 +85,7 @@ export const useSettingsStore = defineStore('settings', {
     const loadedSettings = JSON.parse(localStorage.getItem(LS_PREFIX + 'appSettings'));
     return {
       ...DEFAULT_SETTINGS,
-      ...(loadedSettings || {}),
+      ...loadedSettings,
       theme: (loadedSettings && loadedSettings.theme) ? loadedSettings.theme : DEFAULT_SETTINGS.theme,
       locale: (loadedSettings && loadedSettings.locale) ? loadedSettings.locale : DEFAULT_SETTINGS.locale,
       customColors: (loadedSettings && loadedSettings.customColors) ? loadedSettings.customColors : null,

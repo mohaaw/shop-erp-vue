@@ -120,7 +120,7 @@ const closeCustomerModal = () => {
   isCustomerModalVisible.value = false;
   editingCustomerId.value = null;
 };
-const handleCustomerSaved = (savedCustomer) => {
+const handleCustomerSaved = () => {
   // Toast is handled within CustomerForm.vue upon successful save
   // The list will reactively update because the store changed.
   // No explicit fetch needed here if store updates its array reactively.

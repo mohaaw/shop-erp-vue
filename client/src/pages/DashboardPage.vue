@@ -68,7 +68,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import DashboardStats from '@/components/dashboard/DashboardStats.vue';
 import DashboardCharts from '@/components/dashboard/DashboardCharts.vue';
 import QuickActionsWidget from '@/components/dashboard/QuickActionsWidget.vue';

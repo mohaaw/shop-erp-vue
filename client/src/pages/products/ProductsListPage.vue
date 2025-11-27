@@ -167,7 +167,7 @@ const closeStockAdjustmentModal = () => {
   isStockAdjustmentModalVisible.value = false;
   selectedProductForAction.value = null;
 };
-const handleStockAdjusted = (payload) => {
+const handleStockAdjusted = () => {
   toastStore.success(`Stock for "${selectedProductForAction.value?.model}" adjusted successfully.`);
   // The product list should reactively update as productStore.products changes.
   // If not, a targeted productStore.fetchProducts() might be needed, but ideally not.

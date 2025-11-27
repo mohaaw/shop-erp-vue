@@ -75,7 +75,7 @@ const deleteSupplier = async (id) => {
     try {
       await supplierStore.deleteSupplier(id);
       toastStore.success('Supplier deleted successfully');
-    } catch (error) {
+    } catch {
       toastStore.error('Failed to delete supplier');
     }
   }

@@ -61,7 +61,7 @@
 <script setup>
 import { useSettingsStore } from '@/stores/settingsStore';
 
-const props = defineProps({
+defineProps({
   visible: Boolean,
   sale: Object // The full sale object to display
 });

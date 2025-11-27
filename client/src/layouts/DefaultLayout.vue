@@ -33,8 +33,7 @@ import { reactive, onMounted, onUnmounted, computed } from 'vue';
 import AppHeader from '@/components/common/AppHeader.vue';
 import AppSidebar from '@/components/common/AppSidebar.vue';
 
-const SIDEBAR_WIDTH_EXPANDED = '260px';
-const SIDEBAR_WIDTH_COLLAPSED = '70px';
+
 
 const sidebarState = reactive({
   isUserCollapsed: localStorage.getItem('shopErpSidebarCollapsed') === 'true',

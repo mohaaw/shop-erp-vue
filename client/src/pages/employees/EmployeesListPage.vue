@@ -89,7 +89,7 @@ const deleteEmployee = async (id) => {
     try {
       await employeeStore.deleteEmployee(id);
       toastStore.success('Employee deleted successfully');
-    } catch (error) {
+    } catch {
       toastStore.error('Failed to delete employee');
     }
   }

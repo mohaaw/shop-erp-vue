@@ -155,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useProductStore } from '@/stores/productStore';
 import { useCustomerStore } from '@/stores/customerStore';
 import { useCartStore } from '@/stores/cartStore';

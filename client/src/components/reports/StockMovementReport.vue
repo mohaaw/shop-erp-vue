@@ -88,7 +88,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useStockMovementStore } from '@/stores/stockMovementStore';
 import { useProductStore } from '@/stores/productStore';
 import { useSettingsStore } from '@/stores/settingsStore';
@@ -122,7 +122,7 @@ const printReport = () => {
     const printWindow = window.open('', '_blank', 'height=700,width=1000');
     if(printWindow) {
       printWindow.document.write('<html><head><title>Stock Movement Ledger</title>');
-      const styles = Array.from(document.styleSheets).map(s => { try { return Array.from(s.cssRules).map(r=>r.cssText).join('\n'); } catch(e){ if(s.href) return `<link rel="stylesheet" href="${s.href}">`; return '';}}).join('\n');
+      const styles = Array.from(document.styleSheets).map(s => { try { return Array.from(s.cssRules).map(r=>r.cssText).join('\n'); } catch{ if(s.href) return `<link rel="stylesheet" href="${s.href}">`; return '';}}).join('\n');
       printWindow.document.write(`<style>${styles}</style>`);
       printWindow.document.write('<style>.no-print{display:none !important;} .print-only{display:block !important;} .report-title-print{text-align:center; margin-bottom:0.5rem; font-size: 14pt;} table{font-size:9pt} body{background-color: #fff !important; color: #000 !important; font-family: Arial, sans-serif;} .store-name-print{display:block !important; text-align:center; font-weight:bold; margin-bottom: 0.5rem;} .date-print{display:block !important; text-align:center; font-size:0.9em; margin-bottom:0.5rem;}</style>');
       printWindow.document.write('</head><body style="margin: 20px;">');
@@ -184,5 +184,5 @@ onMounted(async () => {
 }
 [data-theme="dark"] .btn-outline-secondary { color: var(--nav-text-color); border-color: var(--nav-text-color); }
 [data-theme="dark"] .btn-outline-secondary:hover { color: var(--bg-color); background-color: var(--nav-text-color); }
-.report-title-screen { /* Screen only title */ }
+
 </style>
